@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FitBro - Fitness Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .calorie-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 15px solid #4CAF50;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+        }
+        .macros {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .macro {
+            text-align: center;
+        }
+        .macro-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>FitBro Dashboard</h1>
+        
+        <div class="card">
+            <h2>Today's Calories</h2>
+            <div class="calorie-circle">
+                <span id="calories">0</span> / 2000
+            </div>
+            
+            <div class="macros">
+                <div class="macro">
+                    <div class="macro-value" id="protein">0g</div>
+                    <div>Protein</div>
+                </div>
+                <div class="macro">
+                    <div class="macro-value" id="carbs">0g</div>
+                    <div>Carbs</div>
+                </div>
+                <div class="macro">
+                    <div class="macro-value" id="fat">0g</div>
+                    <div>Fat</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Today's Meals</h2>
+            <div id="meal-list">
+                <p>No meals logged yet</p>
+            </div>
+            <button onclick="alert('Add food feature coming soon!')">+ Add Food</button>
+        </div>
+    </div>
+
+    <script>
+        // Load today's food log when page loads
+        fetch('/api/food-log')
+            .then(response => response.json())
+            .then(data => {
+                if (data.length > 0) {
+                    displayMeals(data);
+                    calculateTotals(data);
+                }
+            });
+
+        function displayMeals(meals) {
+            const mealList = document.getElementById('meal-list');
+            mealList.innerHTML = meals.map(meal => `
+                <p><strong>${meal.meal_type}:</strong> ${meal.name} - ${meal.calories} cal</p>
+            `).join('');
+        }
+
+        function calculateTotals(meals) {
+            let totalCals = 0;
+            let totalProtein = 0;
+            let totalCarbs = 0;
+            let totalFat = 0;
+
+            meals.forEach(meal => {
+                totalCals += meal.calories * meal.servings;
+                totalProtein += meal.protein * meal.servings;
+                totalCarbs += meal.carbs * meal.servings;
+                totalFat += meal.fat * meal.servings;
+            });
+
+            document.getElementById('calories').textContent = Math.round(totalCals);
+            document.getElementById('protein').textContent = Math.round(totalProtein) + 'g';
+            document.getElementById('carbs').textContent = Math.round(totalCarbs) + 'g';
+            document.getElementById('fat').textContent = Math.round(totalFat) + 'g';
+        }
+    </script>
+</body>
+</html>
