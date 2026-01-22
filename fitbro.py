@@ -15,6 +15,11 @@ def get_db():
 def home():
     return render_template('dashboard.html')
 
+# Adding Food Page - add_food
+@app.route('/add-food')
+def add_food_page():  # Changed name here
+    return render_template('add_food.html')
+
 # Get today's food log
 @app.route('/api/food-log')
 def get_food_log():
@@ -39,7 +44,7 @@ def get_food_log():
 
 # Add food to log
 @app.route('/api/add-food', methods=['POST'])
-def add_food():
+def add_food_api():  # Changed name here
     data = request.json
     conn = get_db()
     cursor = conn.cursor()

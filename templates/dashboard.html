@@ -1,103 +1,330 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>FitBro - Fitness Tracker</title>
+    <title>FitBro - Dashboard</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             padding: 20px;
-            background-color: #f5f5f5;
         }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .card {
+        
+        .phone-frame {
+            width: 375px;
             background: white;
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #48c774, #3ab566);
+            padding: 30px 25px;
+            color: white;
+        }
+        
+        .date-section h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .date-section p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 25px;
+            background: white;
+        }
+        
+        .calorie-circle-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .calorie-circle {
+            position: relative;
+            width: 180px;
+            height: 180px;
+        }
+        
+        .calorie-circle svg {
+            transform: rotate(-90deg);
+        }
+        
+        .calorie-circle circle {
+            fill: none;
+            stroke-width: 12;
+        }
+        
+        .circle-bg {
+            stroke: #e8e8e8;
+        }
+        
+        .circle-progress {
+            stroke: #48c774;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s ease;
+        }
+        
+        .calorie-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        
+        .calorie-number {
+            font-size: 48px;
+            font-weight: 700;
+            color: #2c3e50;
+            line-height: 1;
+        }
+        
+        .calorie-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .macros {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        
+        .macro-card {
+            flex: 1;
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .macro-card.protein {
+            background: #e3f2fd;
+        }
+        
+        .macro-card.carbs {
+            background: #fff3e0;
+        }
+        
+        .macro-card.fats {
+            background: #f3e5f5;
+        }
+        
+        .macro-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .macro-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .macro-card.protein .macro-value {
+            color: #1976d2;
+        }
+        
+        .macro-card.carbs .macro-value {
+            color: #f57c00;
+        }
+        
+        .macro-card.fats .macro-value {
+            color: #7b1fa2;
+        }
+        
+        .meals-section {
+            background: linear-gradient(135deg, #48c774, #3ab566);
+            border-radius: 20px;
             padding: 20px;
             margin-bottom: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        h1 {
-            color: #2c3e50;
+        
+        .meals-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
         }
-        .calorie-circle {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            border: 15px solid #4CAF50;
-            margin: 20px auto;
+        
+        .meals-header h2 {
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .camera-icon {
+            background: rgba(255,255,255,0.2);
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
-            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            border: none;
+            font-size: 18px;
         }
-        .macros {
+        
+        .camera-icon:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .meal-card {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .meal-card:hover {
+            transform: translateX(5px);
+        }
+        
+        .meal-card:last-child {
+            margin-bottom: 0;
+        }
+        
+        .meal-info h3 {
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 3px;
+        }
+        
+        .meal-info p {
+            font-size: 13px;
+            color: #95a5a6;
+        }
+        
+        .meal-calories {
+            font-size: 24px;
+            font-weight: 700;
+            color: #48c774;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+        }
+        
+        .bottom-nav {
             display: flex;
             justify-content: space-around;
-            margin-top: 20px;
+            padding: 15px 0;
+            background: linear-gradient(135deg, #2d6a4f, #1b4332);
         }
-        .macro {
-            text-align: center;
-        }
-        .macro-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+        
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.4);
+            transition: all 0.3s;
             cursor: pointer;
-            font-size: 16px;
         }
-        button:hover {
-            background-color: #45a049;
+        
+        .nav-dot.active {
+            background: white;
+            width: 25px;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>FitBro Dashboard</h1>
+    <div class="phone-frame">
+        <div class="header">
+            <div class="date-section">
+                <h1>Today</h1>
+                <p id="current-date">Monday, Nov 10</p>
+            </div>
+        </div>
         
-        <div class="card">
-            <h2>Today's Calories</h2>
-            <div class="calorie-circle">
-                <span id="calories">0</span> / 2000
+        <div class="content">
+            <div class="calorie-circle-container">
+                <div class="calorie-circle">
+                    <svg width="180" height="180">
+                        <circle class="circle-bg" cx="90" cy="90" r="80"></circle>
+                        <circle class="circle-progress" cx="90" cy="90" r="80" 
+                                id="progress-circle"
+                                stroke-dasharray="502.4" 
+                                stroke-dashoffset="502.4"></circle>
+                    </svg>
+                    <div class="calorie-text">
+                        <div class="calorie-number" id="calories-remaining">2000</div>
+                        <div class="calorie-label">remaining</div>
+                    </div>
+                </div>
             </div>
             
             <div class="macros">
-                <div class="macro">
-                    <div class="macro-value" id="protein">0g</div>
-                    <div>Protein</div>
+                <div class="macro-card protein">
+                    <div class="macro-label">Protein</div>
+                    <div class="macro-value" id="protein-value">0g</div>
                 </div>
-                <div class="macro">
-                    <div class="macro-value" id="carbs">0g</div>
-                    <div>Carbs</div>
+                <div class="macro-card carbs">
+                    <div class="macro-label">Carbs</div>
+                    <div class="macro-value" id="carbs-value">0g</div>
                 </div>
-                <div class="macro">
-                    <div class="macro-value" id="fat">0g</div>
-                    <div>Fat</div>
+                <div class="macro-card fats">
+                    <div class="macro-label">Fats</div>
+                    <div class="macro-value" id="fats-value">0g</div>
+                </div>
+            </div>
+            
+            <div class="meals-section">
+                <div class="meals-header">
+                    <h2>Meals</h2>
+                    <button class="camera-icon" onclick="addMeal()">+</button>
+                </div>
+                
+                <div id="meals-list">
+                    <div class="empty-state">No meals logged yet</div>
                 </div>
             </div>
         </div>
         
-        <div class="card">
-            <h2>Today's Meals</h2>
-            <div id="meal-list">
-                <p>No meals logged yet</p>
-            </div>
-            <button onclick="alert('Add food feature coming soon!')">+ Add Food</button>
+        <div class="bottom-nav">
+            <div class="nav-dot active"></div>
+            <div class="nav-dot"></div>
+            <div class="nav-dot"></div>
+            <div class="nav-dot"></div>
+            <div class="nav-dot"></div>
         </div>
     </div>
 
     <script>
+        // Set current date
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const today = new Date();
+        document.getElementById('current-date').textContent = 
+            `${days[today.getDay()]}, ${months[today.getMonth()]} ${today.getDate()}`;
+        
         // Load today's food log when page loads
         fetch('/api/food-log')
             .then(response => response.json())
@@ -106,32 +333,60 @@
                     displayMeals(data);
                     calculateTotals(data);
                 }
+            })
+            .catch(error => {
+                console.log('No data yet or server not running');
             });
 
         function displayMeals(meals) {
-            const mealList = document.getElementById('meal-list');
-            mealList.innerHTML = meals.map(meal => `
-                <p><strong>${meal.meal_type}:</strong> ${meal.name} - ${meal.calories} cal</p>
+            const mealsList = document.getElementById('meals-list');
+            
+            if (meals.length === 0) {
+                mealsList.innerHTML = '<div class="empty-state">No meals logged yet</div>';
+                return;
+            }
+            
+            mealsList.innerHTML = meals.map(meal => `
+                <div class="meal-card">
+                    <div class="meal-info">
+                        <h3>${meal.meal_type}</h3>
+                        <p>${meal.name}</p>
+                    </div>
+                    <div class="meal-calories">${Math.round(meal.calories * meal.servings)}</div>
+                </div>
             `).join('');
         }
 
         function calculateTotals(meals) {
-            let totalCals = 0;
+            const totalCalories = 2000; // Daily goal
+            let consumed = 0;
             let totalProtein = 0;
             let totalCarbs = 0;
             let totalFat = 0;
 
             meals.forEach(meal => {
-                totalCals += meal.calories * meal.servings;
+                consumed += meal.calories * meal.servings;
                 totalProtein += meal.protein * meal.servings;
                 totalCarbs += meal.carbs * meal.servings;
                 totalFat += meal.fat * meal.servings;
             });
 
-            document.getElementById('calories').textContent = Math.round(totalCals);
-            document.getElementById('protein').textContent = Math.round(totalProtein) + 'g';
-            document.getElementById('carbs').textContent = Math.round(totalCarbs) + 'g';
-            document.getElementById('fat').textContent = Math.round(totalFat) + 'g';
+            const remaining = totalCalories - consumed;
+            document.getElementById('calories-remaining').textContent = Math.round(remaining);
+            document.getElementById('protein-value').textContent = Math.round(totalProtein) + 'g';
+            document.getElementById('carbs-value').textContent = Math.round(totalCarbs) + 'g';
+            document.getElementById('fats-value').textContent = Math.round(totalFat) + 'g';
+            
+            // Update progress circle
+            const percentage = (consumed / totalCalories) * 100;
+            const circumference = 502.4;
+            const offset = circumference - (percentage / 100 * circumference);
+            document.getElementById('progress-circle').style.strokeDashoffset = offset;
+        }
+        
+        //add food paghe
+        function addMeal() {
+            window.location.href = '/add-food';
         }
     </script>
 </body>
