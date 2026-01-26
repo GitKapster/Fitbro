@@ -151,85 +151,43 @@
         }
         
         .meals-section {
-            background: linear-gradient(135deg, #48c774, #3ab566);
-            border-radius: 20px;
-            padding: 20px;
             margin-bottom: 20px;
         }
         
-        .meals-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .meals-header h2 {
-            color: white;
-            font-size: 20px;
-            font-weight: 600;
-        }
-        
-        .camera-icon {
-            background: rgba(255,255,255,0.2);
-            width: 35px;
-            height: 35px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: background 0.3s;
-            border: none;
-            font-size: 18px;
-        }
-        
-        .camera-icon:hover {
-            background: rgba(255,255,255,0.3);
-        }
-        
         .meal-card {
-            background: white;
-            padding: 15px 20px;
-            border-radius: 15px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: linear-gradient(135deg, #48c774, #3ab566);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 12px;
             cursor: pointer;
             transition: transform 0.2s;
         }
         
         .meal-card:hover {
-            transform: translateX(5px);
+            transform: translateY(-2px);
         }
         
-        .meal-card:last-child {
-            margin-bottom: 0;
+        .meal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
         }
         
-        .meal-info h3 {
-            font-size: 16px;
-            color: #2c3e50;
-            margin-bottom: 3px;
-        }
-        
-        .meal-info p {
-            font-size: 13px;
-            color: #95a5a6;
+        .meal-header h3 {
+            font-size: 18px;
+            font-weight: 600;
         }
         
         .meal-calories {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
-            color: #48c774;
         }
         
-        .empty-state {
-            text-align: center;
-            padding: 20px;
-            color: rgba(255,255,255,0.8);
-            font-size: 14px;
+        .meal-items {
+            margin-top: 12px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
         }
         
         .bottom-nav {
@@ -296,24 +254,17 @@
                 </div>
             </div>
             
-            <div class="meals-section">
-                <div class="meals-header">
-                    <h2>Meals</h2>
-                    <button class="camera-icon" onclick="addMeal()">+</button>
-                </div>
-                
-                <div id="meals-list">
-                    <div class="empty-state">No meals logged yet</div>
-                </div>
+            <div class="meals-section" id="meals-section">
+                <!-- Meal cards will be added here -->
             </div>
         </div>
         
         <div class="bottom-nav">
-            <div class="nav-dot active"></div>
-            <div class="nav-dot"></div>
-            <div class="nav-dot"></div>
-            <div class="nav-dot"></div>
-            <div class="nav-dot"></div>
+            <div class="nav-dot active" onclick="navigate('/')"></div>
+            <div class="nav-dot" onclick="navigate('/add-food')"></div>
+            <div class="nav-dot" onclick="navigate('/stats')"></div>
+            <div class="nav-dot" onclick="navigate('/community')"></div>
+            <div class="nav-dot" onclick="navigate('/profile')"></div>
         </div>
     </div>
 
@@ -325,40 +276,61 @@
         document.getElementById('current-date').textContent = 
             `${days[today.getDay()]}, ${months[today.getMonth()]} ${today.getDate()}`;
         
-        // Load today's food log when page loads
+        // Navigation function
+        function navigate(path) {
+            window.location.href = path;
+        }
+        
+        // Load today's food and organize by meal
         fetch('/api/food-log')
             .then(response => response.json())
             .then(data => {
-                if (data.length > 0) {
-                    displayMeals(data);
-                    calculateTotals(data);
-                }
+                displayMealCards(data);
+                calculateTotals(data);
             })
             .catch(error => {
-                console.log('No data yet or server not running');
+                console.log('No data yet');
+                displayMealCards([]);
             });
 
-        function displayMeals(meals) {
-            const mealsList = document.getElementById('meals-list');
+        function displayMealCards(foods) {
+            const mealsSection = document.getElementById('meals-section');
+            const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
             
-            if (meals.length === 0) {
-                mealsList.innerHTML = '<div class="empty-state">No meals logged yet</div>';
-                return;
-            }
+            // Group foods by meal type
+            const mealGroups = {};
+            mealTypes.forEach(type => {
+                mealGroups[type] = foods.filter(f => f.meal_type === type);
+            });
             
-            mealsList.innerHTML = meals.map(meal => `
-                <div class="meal-card">
-                    <div class="meal-info">
-                        <h3>${meal.meal_type}</h3>
-                        <p>${meal.name}</p>
+            // Create meal cards
+            mealsSection.innerHTML = mealTypes.map(mealType => {
+                const mealFoods = mealGroups[mealType];
+                const totalCalories = mealFoods.reduce((sum, f) => sum + (f.calories * f.servings), 0);
+                const foodCount = mealFoods.length;
+                
+                return `
+                    <div class="meal-card" onclick="viewMeal('${mealType}')">
+                        <div class="meal-header">
+                            <h3>${mealType}</h3>
+                            <div class="meal-calories">${Math.round(totalCalories)} cal</div>
+                        </div>
+                        ${foodCount > 0 ? `
+                            <div class="meal-items">${foodCount} item${foodCount !== 1 ? 's' : ''}</div>
+                        ` : `
+                            <div class="meal-items">No items yet</div>
+                        `}
                     </div>
-                    <div class="meal-calories">${Math.round(meal.calories * meal.servings)}</div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+        }
+        
+        function viewMeal(mealType) {
+            window.location.href = `/meal/${mealType}`;
         }
 
         function calculateTotals(meals) {
-            const totalCalories = 2000; // Daily goal
+            const totalCalories = 2000;
             let consumed = 0;
             let totalProtein = 0;
             let totalCarbs = 0;
@@ -377,16 +349,11 @@
             document.getElementById('carbs-value').textContent = Math.round(totalCarbs) + 'g';
             document.getElementById('fats-value').textContent = Math.round(totalFat) + 'g';
             
-            // Update progress circle
+            // Update circle
             const percentage = (consumed / totalCalories) * 100;
             const circumference = 502.4;
             const offset = circumference - (percentage / 100 * circumference);
             document.getElementById('progress-circle').style.strokeDashoffset = offset;
-        }
-        
-        //add food paghe
-        function addMeal() {
-            window.location.href = '/add-food';
         }
     </script>
 </body>

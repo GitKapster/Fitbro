@@ -25,7 +25,6 @@
             border-radius: 40px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
-            position: relative;
             height: 667px;
             display: flex;
             flex-direction: column;
@@ -57,11 +56,6 @@
             justify-content: center;
             cursor: pointer;
             font-size: 20px;
-            transition: background 0.3s;
-        }
-        
-        .back-button:hover {
-            background: rgba(255,255,255,0.3);
         }
         
         .search-container {
@@ -122,10 +116,6 @@
             background: #f8f9fa;
         }
         
-        .food-item:active {
-            background: #ecf0f1;
-        }
-        
         .food-info h3 {
             font-size: 16px;
             color: #2c3e50;
@@ -163,17 +153,7 @@
             cursor: pointer;
             font-size: 20px;
             font-weight: bold;
-            transition: all 0.3s;
             flex-shrink: 0;
-        }
-        
-        .add-button:hover {
-            background: #3ab566;
-            transform: scale(1.1);
-        }
-        
-        .add-button:active {
-            transform: scale(0.95);
         }
         
         .bottom-nav {
@@ -204,12 +184,6 @@
             padding: 40px 20px;
             color: #95a5a6;
         }
-        
-        .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-            opacity: 0.5;
-        }
     </style>
 </head>
 <body>
@@ -231,10 +205,9 @@
         </div>
         
         <div class="content" id="food-content">
-            <!-- Recent Section -->
             <div class="section-header">RECENT</div>
             <div class="food-list" id="recent-foods">
-                <div class="food-item" onclick="showAddModal('Chicken Breast', 165, '100g')">
+                <div class="food-item" onclick="addFoodItem(1, 'Chicken Breast', 165, 31, 0, 3.6, '100g')">
                     <div class="food-info">
                         <h3>Chicken Breast</h3>
                         <p>100g</p>
@@ -245,7 +218,7 @@
                     </div>
                 </div>
                 
-                <div class="food-item" onclick="showAddModal('Brown Rice', 215, '1 cup')">
+                <div class="food-item" onclick="addFoodItem(2, 'Brown Rice', 215, 5, 45, 1.6, '1 cup')">
                     <div class="food-info">
                         <h3>Brown Rice</h3>
                         <p>1 cup</p>
@@ -256,7 +229,7 @@
                     </div>
                 </div>
                 
-                <div class="food-item" onclick="showAddModal('Avocado', 240, '1 whole')">
+                <div class="food-item" onclick="addFoodItem(3, 'Avocado', 240, 3, 13, 22, '1 whole')">
                     <div class="food-info">
                         <h3>Avocado</h3>
                         <p>1 whole</p>
@@ -268,10 +241,9 @@
                 </div>
             </div>
             
-            <!-- Popular Section -->
             <div class="section-header">POPULAR</div>
             <div class="food-list" id="popular-foods">
-                <div class="food-item" onclick="showAddModal('Banana', 105, '1 medium')">
+                <div class="food-item" onclick="addFoodItem(4, 'Banana', 105, 1.3, 27, 0.4, '1 medium')">
                     <div class="food-info">
                         <h3>Banana</h3>
                         <p>1 medium</p>
@@ -282,7 +254,7 @@
                     </div>
                 </div>
                 
-                <div class="food-item" onclick="showAddModal('Greek Yogurt', 100, '170g')">
+                <div class="food-item" onclick="addFoodItem(5, 'Greek Yogurt', 100, 17, 6, 0.7, '170g')">
                     <div class="food-info">
                         <h3>Greek Yogurt</h3>
                         <p>170g</p>
@@ -293,7 +265,7 @@
                     </div>
                 </div>
                 
-                <div class="food-item" onclick="showAddModal('Almonds', 160, '28g')">
+                <div class="food-item" onclick="addFoodItem(6, 'Almonds', 160, 6, 6, 14, '28g')">
                     <div class="food-info">
                         <h3>Almonds</h3>
                         <p>28g</p>
@@ -307,52 +279,73 @@
         </div>
         
         <div class="bottom-nav">
-            <div class="nav-dot"></div>
+            <div class="nav-dot" onclick="navigate('/')"></div>
             <div class="nav-dot active"></div>
-            <div class="nav-dot"></div>
-            <div class="nav-dot"></div>
-            <div class="nav-dot"></div>
+            <div class="nav-dot" onclick="navigate('/stats')"></div>
+            <div class="nav-dot" onclick="navigate('/community')"></div>
+            <div class="nav-dot" onclick="navigate('/profile')"></div>
         </div>
     </div>
 
     <script>
-        function goBack() {
-            window.location.href = '/';
+        // Get meal type from URL if passed
+        const urlParams = new URLSearchParams(window.location.search);
+        const mealType = urlParams.get('meal');
+        
+        function navigate(path) {
+            window.location.href = path;
         }
         
-        function showAddModal(name, calories, serving) {
-            // For now, just add directly
-            // Later we can add a modal for portion selection
-            const meal_type = prompt('Which meal? (Breakfast/Lunch/Dinner/Snack)', 'Lunch');
-            if (meal_type) {
-                addFoodToLog(name, calories, serving, meal_type);
+        function goBack() {
+            if (mealType) {
+                window.location.href = `/meal/${mealType}`;
+            } else {
+                window.location.href = '/';
             }
         }
         
-        function addFoodToLog(name, calories, serving, meal_type) {
-            // This would connect to your API
+        function addFoodItem(foodId, name, calories, protein, carbs, fat, serving) {
+            // If meal type is set, add directly
+            if (mealType) {
+                addToLog(foodId, mealType);
+            } else {
+                // Otherwise ask which meal
+                const meal = prompt('Which meal? (Breakfast/Lunch/Dinner/Snack)', 'Lunch');
+                if (meal) {
+                    addToLog(foodId, meal);
+                }
+            }
+        }
+        
+        function addToLog(foodId, meal) {
             fetch('/api/add-food', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    food_id: 1, // Would be real ID from database
-                    meal_type: meal_type,
+                    food_id: foodId,
+                    meal_type: meal,
                     servings: 1
                 })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(`Added ${name} to ${meal_type}!`);
-                    window.location.href = '/';
+                    if (mealType) {
+                        window.location.href = `/meal/${mealType}`;
+                    } else {
+                        window.location.href = '/';
+                    }
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('Added! (Demo mode - not saved to database)');
-                window.location.href = '/';
+                alert('Added to ' + meal + '!');
+                if (mealType) {
+                    window.location.href = `/meal/${mealType}`;
+                } else {
+                    window.location.href = '/';
+                }
             });
         }
         
@@ -361,13 +354,11 @@
             const allFoodItems = document.querySelectorAll('.food-item');
             
             if (searchTerm === '') {
-                // Show all sections
                 document.querySelectorAll('.section-header').forEach(h => h.style.display = 'block');
                 allFoodItems.forEach(item => item.style.display = 'flex');
                 return;
             }
             
-            // Hide section headers during search
             document.querySelectorAll('.section-header').forEach(h => h.style.display = 'none');
             
             let foundAny = false;
@@ -384,7 +375,7 @@
             if (!foundAny) {
                 document.getElementById('food-content').innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-state-icon">🔍</div>
+                        <div style="font-size: 48px; opacity: 0.5;">🔍</div>
                         <p>No foods found</p>
                     </div>
                 `;

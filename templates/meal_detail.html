@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FitBro - Meal Detail</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .phone-frame {
+            width: 375px;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            height: 667px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #48c774, #3ab566);
+            padding: 20px;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .back-button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        
+        .meal-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .add-button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+        }
+        
+        .meal-summary {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .summary-item {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+        }
+        
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            background: white;
+            padding: 20px;
+        }
+        
+        .food-item {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .food-info h3 {
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .food-macros {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .food-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .food-calories {
+            font-size: 18px;
+            font-weight: 700;
+            color: #48c774;
+        }
+        
+        .delete-button {
+            background: #e74c3c;
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #95a5a6;
+        }
+        
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            background: linear-gradient(135deg, #2d6a4f, #1b4332);
+            flex-shrink: 0;
+        }
+        
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.4);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .nav-dot.active {
+            background: white;
+            width: 25px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="header">
+            <div class="header-top">
+                <button class="back-button" onclick="goBack()">‹</button>
+                <h2 class="meal-title" id="meal-title">Breakfast</h2>
+                <button class="add-button" onclick="addFood()">+</button>
+            </div>
+            <div class="meal-summary">
+                <div class="summary-item"><span id="total-calories">0</span> cal</div>
+                <div class="summary-item"><span id="total-protein">0</span>g protein</div>
+                <div class="summary-item"><span id="total-carbs">0</span>g carbs</div>
+                <div class="summary-item"><span id="total-fat">0</span>g fat</div>
+            </div>
+        </div>
+        
+        <div class="content" id="foods-list">
+            <div class="empty-state">
+                <div class="empty-icon">🍽️</div>
+                <p>No foods added yet</p>
+            </div>
+        </div>
+        
+        <div class="bottom-nav">
+            <div class="nav-dot" onclick="navigate('/')"></div>
+            <div class="nav-dot active"></div>
+            <div class="nav-dot" onclick="navigate('/stats')"></div>
+            <div class="nav-dot" onclick="navigate('/community')"></div>
+            <div class="nav-dot" onclick="navigate('/profile')"></div>
+        </div>
+    </div>
+
+    <script>
+        // Get meal type from URL
+        const mealType = window.location.pathname.split('/')[2];
+        document.getElementById('meal-title').textContent = mealType;
+        
+        // Navigate function
+        function navigate(path) {
+            window.location.href = path;
+        }
+        
+        function goBack() {
+            window.location.href = '/';
+        }
+        
+        function addFood() {
+            // Pass meal type to add food page
+            window.location.href = `/add-food?meal=${mealType}`;
+        }
+        
+        // Load foods for this meal
+        fetch(`/api/meal/${mealType}`)
+            .then(response => response.json())
+            .then(foods => {
+                displayFoods(foods);
+                calculateMealTotals(foods);
+            })
+            .catch(error => {
+                console.log('No foods yet');
+            });
+        
+        function displayFoods(foods) {
+            const foodsList = document.getElementById('foods-list');
+            
+            if (foods.length === 0) {
+                foodsList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🍽️</div>
+                        <p>No foods added yet</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            foodsList.innerHTML = foods.map(food => `
+                <div class="food-item">
+                    <div class="food-info">
+                        <h3>${food.name}</h3>
+                        <div class="food-macros">
+                            ${Math.round(food.protein * food.servings)}g protein • 
+                            ${Math.round(food.carbs * food.servings)}g carbs • 
+                            ${Math.round(food.fat * food.servings)}g fat
+                        </div>
+                    </div>
+                    <div class="food-right">
+                        <div class="food-calories">${Math.round(food.calories * food.servings)}</div>
+                        <button class="delete-button" onclick="deleteFood(${food.log_id})">×</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function calculateMealTotals(foods) {
+            let totalCal = 0;
+            let totalPro = 0;
+            let totalCarb = 0;
+            let totalFa = 0;
+            
+            foods.forEach(food => {
+                totalCal += food.calories * food.servings;
+                totalPro += food.protein * food.servings;
+                totalCarb += food.carbs * food.servings;
+                totalFa += food.fat * food.servings;
+            });
+            
+            document.getElementById('total-calories').textContent = Math.round(totalCal);
+            document.getElementById('total-protein').textContent = Math.round(totalPro);
+            document.getElementById('total-carbs').textContent = Math.round(totalCarb);
+            document.getElementById('total-fat').textContent = Math.round(totalFa);
+        }
+        
+        function deleteFood(logId) {
+            if (confirm('Remove this food?')) {
+                fetch(`/api/delete-food/${logId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

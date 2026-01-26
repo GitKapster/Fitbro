@@ -72,6 +72,29 @@ def init_db():
         )
     ''')
     
+    # Add default user
+    cursor.execute('''
+        INSERT OR IGNORE INTO users (id, username, age, weight, height, 
+                                     daily_calorie_goal, daily_protein_goal, 
+                                     daily_carbs_goal, daily_fat_goal)
+        VALUES (1, 'User', 25, 75.0, 175.0, 2000, 150, 200, 65)
+    ''')
+    
+    # Add sample food items
+    foods = [
+        (1, 'Chicken Breast', 165, 31, 0, 3.6, '100g'),
+        (2, 'Brown Rice', 215, 5, 45, 1.6, '1 cup'),
+        (3, 'Avocado', 240, 3, 13, 22, '1 whole'),
+        (4, 'Banana', 105, 1.3, 27, 0.4, '1 medium'),
+        (5, 'Greek Yogurt', 100, 17, 6, 0.7, '170g'),
+        (6, 'Almonds', 160, 6, 6, 14, '28g'),
+    ]
+    
+    cursor.executemany('''
+        INSERT OR IGNORE INTO foods (id, name, calories, protein, carbs, fat, serving_size)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', foods)
+    
     conn.commit()
     conn.close()
     print("Database created with all tables!")
