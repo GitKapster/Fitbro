@@ -110,10 +110,6 @@ def init_db():
     
     conn.commit()
     conn.close()
-    print("✓ Database created successfully with authentication support!")
-    print("✓ Added 15 sample food items")
-    print("✓ All tables created: users, foods, food_log, exercise_log, measurements")
-    print("\nYou can now run your Flask app and register users!")
 
 if __name__ == '__main__':
     init_db()
