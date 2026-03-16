@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>FitBro - Stats</title>
+    <title>FitBro - Diary</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: #f5f5f5;
@@ -18,7 +18,7 @@
             min-height: 100vh;
             padding: 20px;
         }
-        
+
         .phone-frame {
             width: 375px;
             background: white;
@@ -29,104 +29,283 @@
             display: flex;
             flex-direction: column;
         }
-        
+
+        /* ── Header ── */
         .header {
             background: linear-gradient(135deg, #48c774, #3ab566);
             padding: 30px 25px;
             color: white;
+            flex-shrink: 0;
         }
-        
+
         .header h1 {
             font-size: 28px;
             font-weight: 600;
+            margin-bottom: 3px;
         }
-        
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* ── Scrollable content ── */
         .content {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
+            background: #f5f5f5;
+            padding: 15px;
         }
-        
-        .streak-card {
-            background: linear-gradient(135deg, #48c774, #3ab566);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 20px;
-            color: white;
-        }
-        
-        .streak-icon {
-            font-size: 24px;
-            margin-bottom: 8px;
-        }
-        
-        .streak-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 3px;
-        }
-        
-        .streak-subtitle {
-            font-size: 13px;
-            opacity: 0.9;
-        }
-        
-        .section-title {
-            font-size: 13px;
-            color: #7f8c8d;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-        
-        .stats-grid {
+
+        /* ── Calendar card ── */
+        .card {
             background: white;
             border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 18px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
-        
-        .stat-row {
+
+        .cal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .cal-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .nav-btn {
+            background: #f0f9f4;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #48c774;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .nav-btn:hover { background: #d4f5e0; }
+
+        .cal-dow {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #95a5a6;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+        }
+
+        .cal-day {
+            aspect-ratio: 1;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+            position: relative;
+            font-size: 13px;
+            font-weight: 500;
+            color: #2c3e50;
+            border: 2px solid transparent;
+        }
+
+        .cal-day:hover { background: #f0f9f4; transform: scale(1.08); }
+        .cal-day.empty { cursor: default; pointer-events: none; }
+
+        .cal-day.today {
+            border-color: #48c774;
+            font-weight: 700;
+        }
+
+        .cal-day.selected {
+            background: linear-gradient(135deg, #48c774, #3ab566);
+            color: white;
+            font-weight: 700;
+            border-color: transparent;
+        }
+
+        .cal-day.selected:hover { background: linear-gradient(135deg, #3ab566, #2ea055); }
+
+        .cal-day.has-log .dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #48c774;
+            position: absolute;
+            bottom: 3px;
+        }
+
+        .cal-day.selected .dot { background: rgba(255,255,255,0.8); }
+
+        .cal-day.future {
+            color: #bdc3c7;
+            pointer-events: none;
+        }
+
+        /* ── Day detail card ── */
+        #detail-panel { display: none; }
+        #detail-panel.visible { display: block; }
+
+        .detail-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 0;
-            border-bottom: 1px solid #f0f0f0;
+            margin-bottom: 14px;
         }
-        
-        .stat-row:last-child {
-            border-bottom: none;
-        }
-        
-        .stat-label {
+
+        .detail-header h3 {
             font-size: 15px;
+            font-weight: 600;
             color: #2c3e50;
         }
-        
-        .stat-value-row {
-            display: flex;
-            align-items: center;
+
+        .meal-pick-btn {
+            padding: 10px;
+            background: #f0f9f4;
+            border: 2px solid #d4f5e0;
+            border-radius: 12px;
+            color: #2c3e50;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .meal-pick-btn:hover {
+            background: #d4f5e0;
+            border-color: #48c774;
+        }
+
+        .close-btn {
+            background: #f0f9f4;
+            border: none;
+            border-radius: 20px;
+            padding: 5px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #48c774;
+            font-weight: 600;
+        }
+
+        /* Macro pills */
+        .macro-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
             gap: 8px;
+            margin-bottom: 14px;
         }
-        
-        .stat-number {
-            font-size: 16px;
+
+        .macro-pill {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 10px 6px;
+            text-align: center;
+        }
+
+        .macro-pill .val {
+            font-size: 15px;
             font-weight: 700;
+        }
+
+        .macro-pill .lbl {
+            font-size: 10px;
+            color: #95a5a6;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-top: 2px;
+        }
+
+        .macro-pill.cal  .val { color: #e67e22; }
+        .macro-pill.pro  .val { color: #3498db; }
+        .macro-pill.carb .val { color: #9b59b6; }
+        .macro-pill.fat  .val { color: #f39c12; }
+
+        /* Meal groups */
+        .meal-group { margin-bottom: 12px; }
+
+        .meal-group h4 {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #95a5a6;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .food-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 6px;
+            border-radius: 10px;
+            transition: background 0.12s;
+        }
+
+        .food-row:hover { background: #f8f9fa; }
+
+        .food-name {
+            font-size: 14px;
+            font-weight: 500;
             color: #2c3e50;
         }
-        
-        .stat-goal {
-            font-size: 14px;
+
+        .food-servings {
+            font-size: 12px;
             color: #95a5a6;
+            margin-top: 1px;
         }
-        
+
+        .food-cals {
+            font-size: 14px;
+            font-weight: 700;
+            color: #48c774;
+        }
+
+        .empty-day-msg {
+            text-align: center;
+            padding: 25px 15px;
+            color: #95a5a6;
+            font-size: 14px;
+        }
+
+        .loader {
+            text-align: center;
+            padding: 20px;
+            color: #95a5a6;
+            font-size: 13px;
+        }
+
+        /* ── Bottom nav ── */
         .bottom-nav {
             display: flex;
             justify-content: space-around;
             padding: 15px 0;
             background: linear-gradient(135deg, #2d6a4f, #1b4332);
+            flex-shrink: 0;
         }
-        
+
         .nav-dot {
             width: 8px;
             height: 8px;
@@ -135,7 +314,7 @@
             transition: all 0.3s;
             cursor: pointer;
         }
-        
+
         .nav-dot.active {
             background: white;
             width: 25px;
@@ -145,38 +324,56 @@
 </head>
 <body>
     <div class="phone-frame">
+
         <div class="header">
-            <h1>Progress</h1>
-            <p style="font-size: 14px; opacity: 0.9; margin-top: 5px;">This Week</p>
+            <h1>Diary</h1>
+            <p>Your food history</p>
         </div>
-        
+
         <div class="content">
-            <div class="streak-card">
-                <div class="streak-icon">🔥</div>
-                <div class="streak-title">5 Day Streak!</div>
-                <div class="streak-subtitle">Keep it up!</div>
-            </div>
-            
-            <div class="section-title">Daily Calories</div>
-            <div class="stats-grid">
-                <div class="stat-row">
-                    <div class="stat-label">Average Calories</div>
-                    <div class="stat-value-row">
-                        <span class="stat-number">1,850</span>
-                        <span class="stat-goal">/ 2,000</span>
-                    </div>
+
+            <!-- Calendar card -->
+            <div class="card">
+                <div class="cal-header">
+                    <button class="nav-btn" id="prev-btn">&#8592;</button>
+                    <h2 id="month-label"></h2>
+                    <button class="nav-btn" id="next-btn">&#8594;</button>
                 </div>
-                
-                <div class="stat-row">
-                    <div class="stat-label">Weight</div>
-                    <div class="stat-value-row">
-                        <span class="stat-number">72.5 kg</span>
-                        <span class="stat-goal">75.5 kg</span>
-                    </div>
+                <div class="cal-dow">
+                    <span>S</span><span>M</span><span>T</span><span>W</span>
+                    <span>T</span><span>F</span><span>S</span>
                 </div>
+                <div class="cal-grid" id="cal-grid"></div>
             </div>
+
+            <!-- Day detail card (shown on click) -->
+            <div class="card" id="detail-panel">
+                <div class="detail-header">
+                    <h3 id="detail-date-label"></h3>
+                    <button class="close-btn" id="close-detail">✕ Close</button>
+                </div>
+                <div class="macro-bar" id="macro-bar"></div>
+                <div id="meal-list"></div>
+
+                <!-- Meal picker (shown when "+ Add Food" is tapped) -->
+                <div id="meal-picker" style="display:none; margin-top: 12px;">
+                    <p style="font-size:12px; font-weight:600; color:#95a5a6; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">Which meal?</p>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <button class="meal-pick-btn" onclick="goAddFood('Breakfast')">🌅 Breakfast</button>
+                        <button class="meal-pick-btn" onclick="goAddFood('Lunch')">☀️ Lunch</button>
+                        <button class="meal-pick-btn" onclick="goAddFood('Dinner')">🌙 Dinner</button>
+                        <button class="meal-pick-btn" onclick="goAddFood('Snack')">🍎 Snack</button>
+                    </div>
+                    <button onclick="hideMealPicker()" style="width:100%; margin-top:8px; padding:8px; background:none; border:1px solid #ecf0f1; border-radius:10px; color:#95a5a6; font-size:13px; cursor:pointer;">Cancel</button>
+                </div>
+
+                <button id="add-food-btn" onclick="showMealPicker()" style="display:none; width:100%; margin-top:14px; padding:11px; background: linear-gradient(135deg, #48c774, #3ab566); border:none; border-radius:12px; color:white; font-size:14px; font-weight:600; cursor:pointer; transition: transform 0.2s;">
+                    + Add Food to This Day
+                </button>
+            </div>
+
         </div>
-        
+
         <div class="bottom-nav">
             <div class="nav-dot" onclick="navigate('/')"></div>
             <div class="nav-dot" onclick="navigate('/add-food')"></div>
@@ -184,12 +381,224 @@
             <div class="nav-dot" onclick="navigate('/community')"></div>
             <div class="nav-dot" onclick="navigate('/profile')"></div>
         </div>
+
     </div>
 
     <script>
-        function navigate(path) {
-            window.location.href = path;
+        const MONTHS = ['January','February','March','April','May','June',
+                        'July','August','September','October','November','December'];
+        const MEAL_ORDER = ['breakfast','lunch','dinner','snack'];
+
+        let loggedDates = {};
+        let currentYear, currentMonth;
+        let selectedDate = null;
+
+        function navigate(path) { window.location.href = path; }
+
+        // ── Load all logged dates ──────────────────────────────────────────
+        async function loadLoggedDates() {
+            try {
+                const res = await fetch('/api/logged-dates');
+                const data = await res.json();
+                loggedDates = {};
+                data.forEach(d => { loggedDates[d.date] = d.total_calories; });
+            } catch(e) { loggedDates = {}; }
+            renderCalendar();
         }
+
+        // ── Render calendar ────────────────────────────────────────────────
+        function renderCalendar() {
+            document.getElementById('month-label').textContent =
+                `${MONTHS[currentMonth]} ${currentYear}`;
+
+            const grid = document.getElementById('cal-grid');
+            grid.innerHTML = '';
+
+            const today = new Date();
+            const todayStr = toDateStr(today);
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) {
+                const blank = document.createElement('div');
+                blank.className = 'cal-day empty';
+                grid.appendChild(blank);
+            }
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = toDateStr(new Date(currentYear, currentMonth, d));
+                const cell = document.createElement('div');
+                cell.className = 'cal-day';
+                cell.textContent = d;
+
+                if (dateStr === todayStr)     cell.classList.add('today');
+                if (dateStr === selectedDate) cell.classList.add('selected');
+                if (loggedDates[dateStr])     cell.classList.add('has-log');
+
+                const cellDate = new Date(currentYear, currentMonth, d);
+                cellDate.setHours(23, 59, 59);
+                if (cellDate > today) cell.classList.add('future');
+
+                if (loggedDates[dateStr]) {
+                    const dot = document.createElement('span');
+                    dot.className = 'dot';
+                    cell.appendChild(dot);
+                }
+
+                cell.addEventListener('click', () => selectDay(dateStr));
+                grid.appendChild(cell);
+            }
+        }
+
+        function toDateStr(d) {
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
+        // ── Select a day ───────────────────────────────────────────────────
+        async function selectDay(dateStr) {
+            selectedDate = dateStr;
+            renderCalendar();
+
+            const panel = document.getElementById('detail-panel');
+            panel.classList.add('visible');
+
+            const [y, m, d] = dateStr.split('-').map(Number);
+            const nice = new Date(y, m-1, d).toLocaleDateString('en-GB', {
+                weekday: 'long', day: 'numeric', month: 'long'
+            });
+            document.getElementById('detail-date-label').textContent = nice;
+            document.getElementById('macro-bar').innerHTML = '<div class="loader">Loading…</div>';
+            document.getElementById('meal-list').innerHTML = '';
+
+            try {
+                const res = await fetch(`/api/food-log/${dateStr}`);
+                const foods = await res.json();
+                renderDayDetail(foods);
+            } catch(e) {
+                document.getElementById('macro-bar').innerHTML = '';
+                document.getElementById('meal-list').innerHTML =
+                    '<div class="empty-day-msg">Could not load data.</div>';
+            }
+
+            panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            // Show/hide add button — only for today or past days
+            const addBtn = document.getElementById('add-food-btn');
+            const today = new Date(); today.setHours(23,59,59);
+            const isNotFuture = new Date(y, m-1, d) <= today;
+            addBtn.style.display = isNotFuture ? 'block' : 'none';
+            hideMealPicker();
+        }
+
+        function showMealPicker() {
+            document.getElementById('meal-picker').style.display = 'block';
+            document.getElementById('add-food-btn').style.display = 'none';
+        }
+
+        function hideMealPicker() {
+            document.getElementById('meal-picker').style.display = 'none';
+            if (selectedDate) document.getElementById('add-food-btn').style.display = 'block';
+        }
+
+        function goAddFood(meal) {
+            window.location.href = `/add-food?meal=${meal}&date=${selectedDate}`;
+        }
+
+        // ── Render day detail ──────────────────────────────────────────────
+        function renderDayDetail(foods) {
+            const macroBar = document.getElementById('macro-bar');
+            const mealList = document.getElementById('meal-list');
+
+            if (!foods.length) {
+                macroBar.innerHTML = '';
+                mealList.innerHTML = '<div class="empty-day-msg">😴 Nothing logged on this day.</div>';
+                return;
+            }
+
+            const totals = foods.reduce((acc, f) => {
+                acc.cal  += f.total_calories;
+                acc.pro  += f.total_protein;
+                acc.carb += f.total_carbs;
+                acc.fat  += f.total_fat;
+                return acc;
+            }, { cal:0, pro:0, carb:0, fat:0 });
+
+            macroBar.innerHTML = `
+                <div class="macro-pill cal">
+                    <div class="val">${Math.round(totals.cal)}</div>
+                    <div class="lbl">kcal</div>
+                </div>
+                <div class="macro-pill pro">
+                    <div class="val">${totals.pro.toFixed(1)}g</div>
+                    <div class="lbl">Protein</div>
+                </div>
+                <div class="macro-pill carb">
+                    <div class="val">${totals.carb.toFixed(1)}g</div>
+                    <div class="lbl">Carbs</div>
+                </div>
+                <div class="macro-pill fat">
+                    <div class="val">${totals.fat.toFixed(1)}g</div>
+                    <div class="lbl">Fat</div>
+                </div>`;
+
+            const byMeal = {};
+            foods.forEach(f => {
+                const key = f.meal_type.toLowerCase();
+                if (!byMeal[key]) byMeal[key] = [];
+                byMeal[key].push(f);
+            });
+
+            mealList.innerHTML = '';
+            const order = [...MEAL_ORDER, ...Object.keys(byMeal).filter(k => !MEAL_ORDER.includes(k))];
+
+            order.forEach(meal => {
+                if (!byMeal[meal]) return;
+                const group = document.createElement('div');
+                group.className = 'meal-group';
+                group.innerHTML = `<h4>${meal}</h4>`;
+
+                byMeal[meal].forEach(f => {
+                    const row = document.createElement('div');
+                    row.className = 'food-row';
+                    row.innerHTML = `
+                        <div>
+                            <div class="food-name">${f.name}</div>
+                            <div class="food-servings">${f.servings}× serving</div>
+                        </div>
+                        <div class="food-cals">${f.total_calories} cal</div>`;
+                    group.appendChild(row);
+                });
+
+                mealList.appendChild(group);
+            });
+        }
+
+        // ── Nav buttons ────────────────────────────────────────────────────
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            currentMonth--;
+            if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+            renderCalendar();
+        });
+
+        document.getElementById('next-btn').addEventListener('click', () => {
+            const today = new Date();
+            if (currentYear === today.getFullYear() && currentMonth === today.getMonth()) return;
+            currentMonth++;
+            if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+            renderCalendar();
+        });
+
+        document.getElementById('close-detail').addEventListener('click', () => {
+            selectedDate = null;
+            document.getElementById('detail-panel').classList.remove('visible');
+            renderCalendar();
+        });
+
+        // ── Init ───────────────────────────────────────────────────────────
+        const now = new Date();
+        currentYear  = now.getFullYear();
+        currentMonth = now.getMonth();
+        loadLoggedDates();
     </script>
 </body>
 </html>

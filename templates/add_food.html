@@ -291,18 +291,17 @@
         // Get meal type from URL if passed
         const urlParams = new URLSearchParams(window.location.search);
         const mealType = urlParams.get('meal');
+        const logDate   = urlParams.get('date'); 
         
         function navigate(path) {
             window.location.href = path;
         }
         
-        function goBack() {
-            if (mealType) {
-                window.location.href = `/meal/${mealType}`;
-            } else {
-                window.location.href = '/';
-            }
-        }
+       function goBack() {
+    if (logDate)       window.location.href = '/stats';
+    else if (mealType) window.location.href = `/meal/${mealType}`;
+    else               window.location.href = '/';
+}
         
         function addFoodItem(foodId, name, calories, protein, carbs, fat, serving) {
             // If meal type is set, add directly
@@ -318,36 +317,35 @@
         }
         
         function addToLog(foodId, meal) {
-            fetch('/api/add-food', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    food_id: foodId,
-                    meal_type: meal,
-                    servings: 1
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    if (mealType) {
-                        window.location.href = `/meal/${mealType}`;
-                    } else {
-                        window.location.href = '/';
-                    }
-                }
-            })
-            .catch(error => {
-                alert('Added to ' + meal + '!');
-                if (mealType) {
-                    window.location.href = `/meal/${mealType}`;
-                } else {
-                    window.location.href = '/';
-                }
-            });
+    fetch('/api/add-food', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            food_id:   foodId,
+            meal_type: meal,
+            servings:  1,
+            date:      logDate || undefined  
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            // If we came from the diary, go back to it; otherwise go to meal detail or home
+            if (logDate) {
+                window.location.href = '/stats';
+            } else if (mealType) {
+                window.location.href = `/meal/${mealType}`;
+            } else {
+                window.location.href = '/';
+            }
         }
+    })
+    .catch(() => {
+        if (logDate)       window.location.href = '/stats';
+        else if (mealType) window.location.href = `/meal/${mealType}`;
+        else               window.location.href = '/';
+    });
+}
         
         function searchFoods() {
             const searchTerm = document.getElementById('search-input').value.toLowerCase();

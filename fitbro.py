@@ -191,18 +191,67 @@ def add_food_api():
     data = request.json
     conn = get_db()
     cursor = conn.cursor()
-    
+
     user_id = session['user_id']
-    
+    log_date = data.get('date', str(date.today()))  # ← use provided date or today
+
     cursor.execute('''
         INSERT INTO food_log (user_id, food_id, meal_type, servings, date)
         VALUES (?, ?, ?, ?, ?)
-    ''', (user_id, data['food_id'], data['meal_type'], data['servings'], str(date.today())))
-    
+    ''', (user_id, data['food_id'], data['meal_type'], data['servings'], log_date))
+
     conn.commit()
     conn.close()
-    
+
     return jsonify({'success': True})
+
+# Get all dates that have food log entries for the current user (for calendar dots)
+@app.route('/api/logged-dates')
+@login_required
+def get_logged_dates():
+    conn = get_db()
+    cursor = conn.cursor()
+    user_id = session['user_id']
+
+    cursor.execute('''
+        SELECT DISTINCT date, SUM(f.calories * fl.servings) as total_calories
+        FROM food_log fl
+        JOIN foods f ON fl.food_id = f.id
+        WHERE fl.user_id = ?
+        GROUP BY date
+    ''', (user_id,))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return jsonify([{'date': r['date'], 'total_calories': round(r['total_calories'])} for r in rows])
+
+
+# Get full food log for a specific date
+@app.route('/api/food-log/<date_str>')
+@login_required
+def get_food_log_by_date(date_str):
+    conn = get_db()
+    cursor = conn.cursor()
+    user_id = session['user_id']
+
+    cursor.execute('''
+        SELECT f.name, f.calories, f.protein, f.carbs, f.fat,
+               fl.meal_type, fl.servings,
+               ROUND(f.calories * fl.servings) as total_calories,
+               ROUND(f.protein * fl.servings, 1) as total_protein,
+               ROUND(f.carbs   * fl.servings, 1) as total_carbs,
+               ROUND(f.fat     * fl.servings, 1) as total_fat
+        FROM food_log fl
+        JOIN foods f ON fl.food_id = f.id
+        WHERE fl.date = ? AND fl.user_id = ?
+        ORDER BY fl.meal_type
+    ''', (date_str, user_id))
+
+    foods = cursor.fetchall()
+    conn.close()
+
+    return jsonify([dict(f) for f in foods])
 
 # Delete food from log (with user verification)
 @app.route('/api/delete-food/<int:log_id>', methods=['DELETE'])
