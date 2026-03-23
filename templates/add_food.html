@@ -28,6 +28,7 @@
             height: 667px;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
         
         .header {
@@ -184,10 +185,88 @@
             padding: 40px 20px;
             color: #95a5a6;
         }
+
+        /* Meal picker modal */
+        .modal {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 10;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-box {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            width: 80%;
+        }
+
+        .modal-box p {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .modal-box select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+            margin-bottom: 15px;
+        }
+
+        .modal-confirm {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #48c774, #3ab566);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .modal-cancel {
+            width: 100%;
+            padding: 10px;
+            background: none;
+            border: 1px solid #ecf0f1;
+            border-radius: 10px;
+            color: #95a5a6;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
     </style>
 </head>
 <body>
     <div class="phone-frame">
+
+        <!-- Meal picker modal -->
+        <div class="modal" id="meal-modal">
+            <div class="modal-box">
+                <p>Which meal?</p>
+                <select id="meal-select">
+                    <option value="Breakfast">Breakfast</option>
+                    <option value="Lunch">Lunch</option>
+                    <option value="Dinner">Dinner</option>
+                    <option value="Snack">Snack</option>
+                </select>
+                <button class="modal-confirm" onclick="confirmMeal()">Add</button>
+                <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+
         <div class="header">
             <div class="header-top">
                 <button class="back-button" onclick="goBack()">‹</button>
@@ -288,64 +367,72 @@
     </div>
 
     <script>
-        // Get meal type from URL if passed
+        // Get meal type and date from URL if passed
         const urlParams = new URLSearchParams(window.location.search);
         const mealType = urlParams.get('meal');
-        const logDate   = urlParams.get('date'); 
+        const logDate  = urlParams.get('date');
+
+        // Holds the food id waiting for meal selection
+        let pendingFoodId = null;
         
         function navigate(path) {
             window.location.href = path;
         }
         
-       function goBack() {
-    if (logDate)       window.location.href = '/stats';
-    else if (mealType) window.location.href = `/meal/${mealType}`;
-    else               window.location.href = '/';
-}
+        function goBack() {
+            if (logDate)       window.location.href = '/stats';
+            else if (mealType) window.location.href = `/meal/${mealType}`;
+            else               window.location.href = '/';
+        }
         
-        function addFoodItem(foodId, name, calories, protein, carbs, fat, serving) {
-            // If meal type is set, add directly
+        function addFoodItem(foodId) {
             if (mealType) {
+                // Meal type already set in URL, skip the modal
                 addToLog(foodId, mealType);
             } else {
-                // Otherwise ask which meal
-                const meal = prompt('Which meal? (Breakfast/Lunch/Dinner/Snack)', 'Lunch');
-                if (meal) {
-                    addToLog(foodId, meal);
-                }
+                // Show dropdown modal
+                pendingFoodId = foodId;
+                document.getElementById('meal-modal').style.display = 'flex';
             }
+        }
+
+        function confirmMeal() {
+            const meal = document.getElementById('meal-select').value;
+            const foodId = pendingFoodId; // save before closeModal wipes it
+            closeModal();
+            addToLog(foodId, meal);
+        }
+
+        function closeModal() {
+            document.getElementById('meal-modal').style.display = 'none';
+            pendingFoodId = null;
         }
         
         function addToLog(foodId, meal) {
-    fetch('/api/add-food', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            food_id:   foodId,
-            meal_type: meal,
-            servings:  1,
-            date:      logDate || undefined  
-        })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            // If we came from the diary, go back to it; otherwise go to meal detail or home
-            if (logDate) {
-                window.location.href = '/stats';
-            } else if (mealType) {
-                window.location.href = `/meal/${mealType}`;
-            } else {
-                window.location.href = '/';
-            }
+            fetch('/api/add-food', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    food_id:   foodId,
+                    meal_type: meal,
+                    servings:  1,
+                    date:      logDate || undefined
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    if (logDate)       window.location.href = '/stats';
+                    else if (mealType) window.location.href = `/meal/${mealType}`;
+                    else               window.location.href = '/';
+                }
+            })
+            .catch(() => {
+                if (logDate)       window.location.href = '/stats';
+                else if (mealType) window.location.href = `/meal/${mealType}`;
+                else               window.location.href = '/';
+            });
         }
-    })
-    .catch(() => {
-        if (logDate)       window.location.href = '/stats';
-        else if (mealType) window.location.href = `/meal/${mealType}`;
-        else               window.location.href = '/';
-    });
-}
         
         function searchFoods() {
             const searchTerm = document.getElementById('search-input').value.toLowerCase();

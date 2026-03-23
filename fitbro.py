@@ -79,10 +79,10 @@ def register():
         
         # Insert new user
         cursor.execute('''
-            INSERT INTO users (username, email, password, is_student, age, height,
-                             daily_calorie_goal, daily_protein_goal, daily_carbs_goal, daily_fat_goal)
-            VALUES (?, ?, ?, ?, 25, 75.0, 175.0, 2000, 150, 200, 65)
-        ''', (username, email, hashed_password, is_student))
+    INSERT INTO users (username, email, password, is_student, age, height,
+                     daily_calorie_goal, daily_protein_goal, daily_carbs_goal, daily_fat_goal)
+    VALUES (?, ?, ?, ?, 25, 175.0, 2000, 150, 200, 65)
+''', (username, email, hashed_password, is_student))
         
         conn.commit()
         user_id = cursor.lastrowid
