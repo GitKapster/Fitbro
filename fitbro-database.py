@@ -21,7 +21,6 @@ def init_db():
             password TEXT NOT NULL,
             is_student BOOLEAN DEFAULT 0,
             age INTEGER DEFAULT 25,
-            weight REAL DEFAULT 75.0,
             height REAL DEFAULT 175.0,
             daily_calorie_goal INTEGER DEFAULT 2000,
             daily_protein_goal INTEGER DEFAULT 150,
