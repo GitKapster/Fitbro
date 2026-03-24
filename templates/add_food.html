@@ -3,12 +3,8 @@
 <head>
     <title>FitBro - Add Food</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: #f5f5f5;
@@ -18,7 +14,7 @@
             min-height: 100vh;
             padding: 20px;
         }
-        
+
         .phone-frame {
             width: 375px;
             background: white;
@@ -30,21 +26,21 @@
             flex-direction: column;
             position: relative;
         }
-        
+
         .header {
             background: linear-gradient(135deg, #48c774, #3ab566);
             padding: 20px;
             color: white;
             flex-shrink: 0;
         }
-        
+
         .header-top {
             display: flex;
             align-items: center;
             gap: 15px;
             margin-bottom: 15px;
         }
-        
+
         .back-button {
             background: rgba(255,255,255,0.2);
             border: none;
@@ -58,12 +54,9 @@
             cursor: pointer;
             font-size: 20px;
         }
-        
-        .search-container {
-            position: relative;
-            flex: 1;
-        }
-        
+
+        .search-container { position: relative; flex: 1; }
+
         .search-box {
             width: 100%;
             padding: 12px 15px 12px 40px;
@@ -73,7 +66,7 @@
             background: white;
             outline: none;
         }
-        
+
         .search-icon {
             position: absolute;
             left: 15px;
@@ -82,13 +75,9 @@
             color: #95a5a6;
             font-size: 16px;
         }
-        
-        .content {
-            flex: 1;
-            overflow-y: auto;
-            background: white;
-        }
-        
+
+        .content { flex: 1; overflow-y: auto; background: white; }
+
         .section-header {
             padding: 15px 20px 10px 20px;
             font-size: 12px;
@@ -98,11 +87,7 @@
             letter-spacing: 0.5px;
             background: #f8f9fa;
         }
-        
-        .food-list {
-            background: white;
-        }
-        
+
         .food-item {
             padding: 15px 20px;
             border-bottom: 1px solid #ecf0f1;
@@ -112,35 +97,28 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        
-        .food-item:hover {
-            background: #f8f9fa;
-        }
-        
-        .food-info h3 {
-            font-size: 16px;
-            color: #2c3e50;
-            margin-bottom: 4px;
-            font-weight: 600;
-        }
-        
-        .food-info p {
+
+        .food-item:hover { background: #f8f9fa; }
+
+        .food-info h3 { font-size: 16px; color: #2c3e50; margin-bottom: 4px; font-weight: 600; }
+        .food-info p  { font-size: 13px; color: #95a5a6; }
+
+        .food-calories { display: flex; align-items: center; gap: 15px; }
+
+        .calories-value { font-size: 15px; color: #7f8c8d; font-weight: 500; }
+
+        /* Grams input shown on OpenFoodFacts results */
+        .grams-input {
+            width: 52px;
+            padding: 5px 6px;
+            border: 1px solid #ecf0f1;
+            border-radius: 8px;
             font-size: 13px;
-            color: #95a5a6;
+            text-align: center;
+            outline: none;
+            color: #2c3e50;
         }
-        
-        .food-calories {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .calories-value {
-            font-size: 15px;
-            color: #7f8c8d;
-            font-weight: 500;
-        }
-        
+
         .add-button {
             background: #48c774;
             border: none;
@@ -156,7 +134,7 @@
             font-weight: bold;
             flex-shrink: 0;
         }
-        
+
         .bottom-nav {
             display: flex;
             justify-content: space-around;
@@ -164,7 +142,7 @@
             background: linear-gradient(135deg, #2d6a4f, #1b4332);
             flex-shrink: 0;
         }
-        
+
         .nav-dot {
             width: 8px;
             height: 8px;
@@ -173,27 +151,17 @@
             transition: all 0.3s;
             cursor: pointer;
         }
-        
-        .nav-dot.active {
-            background: white;
-            width: 25px;
-            border-radius: 4px;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #95a5a6;
-        }
+
+        .nav-dot.active { background: white; width: 25px; border-radius: 4px; }
+
+        .empty-state { text-align: center; padding: 40px 20px; color: #95a5a6; }
 
         /* Meal picker modal */
         .modal {
             display: none;
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background: rgba(0,0,0,0.5);
             z-index: 10;
             justify-content: center;
@@ -207,12 +175,7 @@
             width: 80%;
         }
 
-        .modal-box p {
-            font-size: 16px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 15px;
-        }
+        .modal-box p { font-size: 16px; font-weight: 600; color: #2c3e50; margin-bottom: 15px; }
 
         .modal-box select {
             width: 100%;
@@ -272,91 +235,53 @@
                 <button class="back-button" onclick="goBack()">‹</button>
                 <div class="search-container">
                     <span class="search-icon">🔍</span>
-                    <input 
-                        type="text" 
-                        class="search-box" 
-                        placeholder="Search foods..."
+                    <input
+                        type="text"
+                        class="search-box"
+                        placeholder="Search any food..."
                         id="search-input"
-                        oninput="searchFoods()"
+                        oninput="onSearchInput()"
                     >
                 </div>
             </div>
         </div>
-        
+
         <div class="content" id="food-content">
-            <div class="section-header">RECENT</div>
-            <div class="food-list" id="recent-foods">
-                <div class="food-item" onclick="addFoodItem(1, 'Chicken Breast', 165, 31, 0, 3.6, '100g')">
-                    <div class="food-info">
-                        <h3>Chicken Breast</h3>
-                        <p>100g</p>
-                    </div>
-                    <div class="food-calories">
-                        <span class="calories-value">165 cal</span>
-                        <button class="add-button">+</button>
-                    </div>
+            <!-- Static quick-access foods shown when search is empty -->
+            <div id="static-sections">
+                <div class="section-header">RECENT</div>
+                <div class="food-item" onclick="addStaticFood(1)">
+                    <div class="food-info"><h3>Chicken Breast</h3><p>100g</p></div>
+                    <div class="food-calories"><span class="calories-value">165 cal</span><button class="add-button">+</button></div>
                 </div>
-                
-                <div class="food-item" onclick="addFoodItem(2, 'Brown Rice', 215, 5, 45, 1.6, '1 cup')">
-                    <div class="food-info">
-                        <h3>Brown Rice</h3>
-                        <p>1 cup</p>
-                    </div>
-                    <div class="food-calories">
-                        <span class="calories-value">215 cal</span>
-                        <button class="add-button">+</button>
-                    </div>
+                <div class="food-item" onclick="addStaticFood(2)">
+                    <div class="food-info"><h3>Brown Rice</h3><p>1 cup</p></div>
+                    <div class="food-calories"><span class="calories-value">215 cal</span><button class="add-button">+</button></div>
                 </div>
-                
-                <div class="food-item" onclick="addFoodItem(3, 'Avocado', 240, 3, 13, 22, '1 whole')">
-                    <div class="food-info">
-                        <h3>Avocado</h3>
-                        <p>1 whole</p>
-                    </div>
-                    <div class="food-calories">
-                        <span class="calories-value">240 cal</span>
-                        <button class="add-button">+</button>
-                    </div>
+                <div class="food-item" onclick="addStaticFood(3)">
+                    <div class="food-info"><h3>Avocado</h3><p>1 whole</p></div>
+                    <div class="food-calories"><span class="calories-value">240 cal</span><button class="add-button">+</button></div>
+                </div>
+
+                <div class="section-header">POPULAR</div>
+                <div class="food-item" onclick="addStaticFood(4)">
+                    <div class="food-info"><h3>Banana</h3><p>1 medium</p></div>
+                    <div class="food-calories"><span class="calories-value">105 cal</span><button class="add-button">+</button></div>
+                </div>
+                <div class="food-item" onclick="addStaticFood(5)">
+                    <div class="food-info"><h3>Greek Yogurt</h3><p>170g</p></div>
+                    <div class="food-calories"><span class="calories-value">100 cal</span><button class="add-button">+</button></div>
+                </div>
+                <div class="food-item" onclick="addStaticFood(6)">
+                    <div class="food-info"><h3>Almonds</h3><p>28g</p></div>
+                    <div class="food-calories"><span class="calories-value">160 cal</span><button class="add-button">+</button></div>
                 </div>
             </div>
-            
-            <div class="section-header">POPULAR</div>
-            <div class="food-list" id="popular-foods">
-                <div class="food-item" onclick="addFoodItem(4, 'Banana', 105, 1.3, 27, 0.4, '1 medium')">
-                    <div class="food-info">
-                        <h3>Banana</h3>
-                        <p>1 medium</p>
-                    </div>
-                    <div class="food-calories">
-                        <span class="calories-value">105 cal</span>
-                        <button class="add-button">+</button>
-                    </div>
-                </div>
-                
-                <div class="food-item" onclick="addFoodItem(5, 'Greek Yogurt', 100, 17, 6, 0.7, '170g')">
-                    <div class="food-info">
-                        <h3>Greek Yogurt</h3>
-                        <p>170g</p>
-                    </div>
-                    <div class="food-calories">
-                        <span class="calories-value">100 cal</span>
-                        <button class="add-button">+</button>
-                    </div>
-                </div>
-                
-                <div class="food-item" onclick="addFoodItem(6, 'Almonds', 160, 6, 6, 14, '28g')">
-                    <div class="food-info">
-                        <h3>Almonds</h3>
-                        <p>28g</p>
-                    </div>
-                    <div class="food-calories">
-                        <span class="calories-value">160 cal</span>
-                        <button class="add-button">+</button>
-                    </div>
-                </div>
-            </div>
+
+            <!-- OpenFoodFacts search results injected here when user types -->
+            <div id="off-results" style="display:none;"></div>
         </div>
-        
+
         <div class="bottom-nav">
             <div class="nav-dot" onclick="navigate('/')"></div>
             <div class="nav-dot active"></div>
@@ -367,48 +292,152 @@
     </div>
 
     <script>
-        // Get meal type and date from URL if passed
         const urlParams = new URLSearchParams(window.location.search);
         const mealType = urlParams.get('meal');
         const logDate  = urlParams.get('date');
 
-        // Holds the food id waiting for meal selection
-        let pendingFoodId = null;
-        
-        function navigate(path) {
-            window.location.href = path;
-        }
-        
+        // pendingFoodId  → waiting to log a static (DB) food
+        // pendingOFFFood → waiting to log an OpenFoodFacts food
+        let pendingFoodId  = null;
+        let pendingOFFFood = null;
+
+        // Debounce timer so we don't hit the API on every single keystroke
+        let searchTimer = null;
+
+        function navigate(path) { window.location.href = path; }
+
         function goBack() {
             if (logDate)       window.location.href = '/stats';
             else if (mealType) window.location.href = `/meal/${mealType}`;
             else               window.location.href = '/';
         }
-        
-        function addFoodItem(foodId) {
+
+        // ── Search input handler ──────────────────────────────────────────
+        function onSearchInput() {
+            const q = document.getElementById('search-input').value.trim();
+
+            clearTimeout(searchTimer);
+
+            if (!q) {
+                // Empty search — go back to showing the static sections
+                document.getElementById('static-sections').style.display = 'block';
+                document.getElementById('off-results').style.display = 'none';
+                return;
+            }
+
+            // Hide static sections while searching
+            document.getElementById('static-sections').style.display = 'none';
+            document.getElementById('off-results').style.display = 'block';
+            document.getElementById('off-results').innerHTML =
+                '<div class="empty-state">Searching...</div>';
+
+            // Wait 400ms after the user stops typing before hitting the API
+            searchTimer = setTimeout(() => searchOpenFoodFacts(q), 400);
+        }
+
+        // ── Fetch from OpenFoodFacts via Flask (avoids CORS) ─────────────
+        async function searchOpenFoodFacts(q) {
+            try {
+                // Call our own Flask endpoint — it fetches from OpenFoodFacts server-side
+                const res  = await fetch(`/api/search-food?q=${encodeURIComponent(q)}`);
+                const valid = await res.json();
+
+                if (!valid.length) {
+                    document.getElementById('off-results').innerHTML =
+                        '<div class="empty-state">No results found. Try a different name.</div>';
+                    return;
+                }
+
+                // Store results so addOFFFood() can read them by index
+                window._offResults = valid;
+
+                const html = valid.map((p, i) => {
+                    const cal  = Math.round(p.calories ?? 0);
+                    const pro  = (p.protein ?? 0).toFixed(1);
+                    const carb = (p.carbs   ?? 0).toFixed(1);
+                    const fat  = (p.fat     ?? 0).toFixed(1);
+                    const brand = p.brand ? ` · ${p.brand}` : '';
+
+                    return `
+                        <div class="food-item">
+                            <div class="food-info">
+                                <h3>${p.name}</h3>
+                                <p>${cal} kcal · ${pro}g P · ${carb}g C · ${fat}g F${brand} <span style="font-size:11px">(per 100g)</span></p>
+                            </div>
+                            <div class="food-calories">
+                                <input class="grams-input" type="number" min="1" value="100"
+                                    id="grams-${i}" onclick="event.stopPropagation()" />
+                                <button class="add-button" onclick="addOFFFood(${i})">+</button>
+                            </div>
+                        </div>`;
+                }).join('');
+
+                document.getElementById('off-results').innerHTML =
+                    `<div class="section-header">RESULTS FROM OPENFOODFACTS</div>` + html;
+
+            } catch (e) {
+                document.getElementById('off-results').innerHTML =
+                    '<div class="empty-state">Search failed. Make sure Flask is running.</div>';
+            }
+        }
+
+        // ── Add a static (DB) food ────────────────────────────────────────
+        function addStaticFood(foodId) {
             if (mealType) {
-                // Meal type already set in URL, skip the modal
-                addToLog(foodId, mealType);
+                addStaticToLog(foodId, mealType);
             } else {
-                // Show dropdown modal
-                pendingFoodId = foodId;
+                pendingFoodId  = foodId;
+                pendingOFFFood = null;
                 document.getElementById('meal-modal').style.display = 'flex';
             }
         }
 
+        // ── Add an OpenFoodFacts food ─────────────────────────────────────
+        function addOFFFood(index) {
+            const p = window._offResults[index];
+            const n = p.nutriments;
+            const grams = parseFloat(document.getElementById(`grams-${index}`).value) || 100;
+
+            // Bundle up everything we need to send to the server
+            pendingOFFFood = {
+                name:    p.product_name,
+                calories: n['energy-kcal_100g'] ?? 0,
+                protein:  n['proteins_100g'] ?? 0,
+                carbs:    n['carbohydrates_100g'] ?? 0,
+                fat:      n['fat_100g'] ?? 0,
+                grams:    grams
+            };
+            pendingFoodId = null;
+
+            if (mealType) {
+                addOFFToLog(pendingOFFFood, mealType);
+            } else {
+                document.getElementById('meal-modal').style.display = 'flex';
+            }
+        }
+
+        // ── Modal confirm — works for both food types ─────────────────────
         function confirmMeal() {
             const meal = document.getElementById('meal-select').value;
-            const foodId = pendingFoodId; // save before closeModal wipes it
+            const offFood = pendingOFFFood;
+            const staticId = pendingFoodId;
             closeModal();
-            addToLog(foodId, meal);
+
+            if (offFood) {
+                addOFFToLog(offFood, meal);
+            } else if (staticId) {
+                addStaticToLog(staticId, meal);
+            }
         }
 
         function closeModal() {
             document.getElementById('meal-modal').style.display = 'none';
-            pendingFoodId = null;
+            pendingFoodId  = null;
+            pendingOFFFood = null;
         }
-        
-        function addToLog(foodId, meal) {
+
+        // ── POST a static DB food to /api/add-food ────────────────────────
+        function addStaticToLog(foodId, meal) {
             fetch('/api/add-food', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -420,51 +449,34 @@
                 })
             })
             .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    if (logDate)       window.location.href = '/stats';
-                    else if (mealType) window.location.href = `/meal/${mealType}`;
-                    else               window.location.href = '/';
-                }
-            })
-            .catch(() => {
-                if (logDate)       window.location.href = '/stats';
-                else if (mealType) window.location.href = `/meal/${mealType}`;
-                else               window.location.href = '/';
-            });
+            .then(() => redirectAfterAdd());
         }
-        
-        function searchFoods() {
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
-            const allFoodItems = document.querySelectorAll('.food-item');
-            
-            if (searchTerm === '') {
-                document.querySelectorAll('.section-header').forEach(h => h.style.display = 'block');
-                allFoodItems.forEach(item => item.style.display = 'flex');
-                return;
-            }
-            
-            document.querySelectorAll('.section-header').forEach(h => h.style.display = 'none');
-            
-            let foundAny = false;
-            allFoodItems.forEach(item => {
-                const foodName = item.querySelector('h3').textContent.toLowerCase();
-                if (foodName.includes(searchTerm)) {
-                    item.style.display = 'flex';
-                    foundAny = true;
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-            
-            if (!foundAny) {
-                document.getElementById('food-content').innerHTML = `
-                    <div class="empty-state">
-                        <div style="font-size: 48px; opacity: 0.5;">🔍</div>
-                        <p>No foods found</p>
-                    </div>
-                `;
-            }
+
+        // ── POST an OpenFoodFacts food to /api/add-openfood ───────────────
+        function addOFFToLog(food, meal) {
+            fetch('/api/add-openfood', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name:      food.name,
+                    calories:  food.calories,
+                    protein:   food.protein,
+                    carbs:     food.carbs,
+                    fat:       food.fat,
+                    grams:     food.grams,
+                    meal_type: meal,
+                    date:      logDate || undefined
+                })
+            })
+            .then(r => r.json())
+            .then(() => redirectAfterAdd());
+        }
+
+        // ── Go back to wherever the user came from ────────────────────────
+        function redirectAfterAdd() {
+            if (logDate)       window.location.href = '/stats';
+            else if (mealType) window.location.href = `/meal/${mealType}`;
+            else               window.location.href = '/';
         }
     </script>
 </body>
