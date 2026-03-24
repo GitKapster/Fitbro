@@ -107,7 +107,6 @@
 
         .calories-value { font-size: 15px; color: #7f8c8d; font-weight: 500; }
 
-        /* Grams input shown on OpenFoodFacts results */
         .grams-input {
             width: 52px;
             padding: 5px 6px;
@@ -154,7 +153,14 @@
 
         .nav-dot.active { background: white; width: 25px; border-radius: 4px; }
 
-        .empty-state { text-align: center; padding: 40px 20px; color: #95a5a6; }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #95a5a6;
+        }
+
+        .empty-state .icon { font-size: 40px; margin-bottom: 10px; }
+        .empty-state p { font-size: 14px; }
 
         /* Meal picker modal */
         .modal {
@@ -246,40 +252,12 @@
             </div>
         </div>
 
+        <!-- Empty state shown on load, replaced once user types -->
         <div class="content" id="food-content">
-            <!-- Static quick-access foods shown when search is empty -->
-            <div id="static-sections">
-                <div class="section-header">RECENT</div>
-                <div class="food-item" onclick="addStaticFood(1)">
-                    <div class="food-info"><h3>Chicken Breast</h3><p>100g</p></div>
-                    <div class="food-calories"><span class="calories-value">165 cal</span><button class="add-button">+</button></div>
-                </div>
-                <div class="food-item" onclick="addStaticFood(2)">
-                    <div class="food-info"><h3>Brown Rice</h3><p>1 cup</p></div>
-                    <div class="food-calories"><span class="calories-value">215 cal</span><button class="add-button">+</button></div>
-                </div>
-                <div class="food-item" onclick="addStaticFood(3)">
-                    <div class="food-info"><h3>Avocado</h3><p>1 whole</p></div>
-                    <div class="food-calories"><span class="calories-value">240 cal</span><button class="add-button">+</button></div>
-                </div>
-
-                <div class="section-header">POPULAR</div>
-                <div class="food-item" onclick="addStaticFood(4)">
-                    <div class="food-info"><h3>Banana</h3><p>1 medium</p></div>
-                    <div class="food-calories"><span class="calories-value">105 cal</span><button class="add-button">+</button></div>
-                </div>
-                <div class="food-item" onclick="addStaticFood(5)">
-                    <div class="food-info"><h3>Greek Yogurt</h3><p>170g</p></div>
-                    <div class="food-calories"><span class="calories-value">100 cal</span><button class="add-button">+</button></div>
-                </div>
-                <div class="food-item" onclick="addStaticFood(6)">
-                    <div class="food-info"><h3>Almonds</h3><p>28g</p></div>
-                    <div class="food-calories"><span class="calories-value">160 cal</span><button class="add-button">+</button></div>
-                </div>
+            <div class="empty-state">
+                <div class="icon">🔍</div>
+                <p>Search for a food to get started</p>
             </div>
-
-            <!-- OpenFoodFacts search results injected here when user types -->
-            <div id="off-results" style="display:none;"></div>
         </div>
 
         <div class="bottom-nav">
@@ -296,12 +274,7 @@
         const mealType = urlParams.get('meal');
         const logDate  = urlParams.get('date');
 
-        // pendingFoodId  → waiting to log a static (DB) food
-        // pendingOFFFood → waiting to log an OpenFoodFacts food
-        let pendingFoodId  = null;
         let pendingOFFFood = null;
-
-        // Debounce timer so we don't hit the API on every single keystroke
         let searchTimer = null;
 
         function navigate(path) { window.location.href = path; }
@@ -319,36 +292,34 @@
             clearTimeout(searchTimer);
 
             if (!q) {
-                // Empty search — go back to showing the static sections
-                document.getElementById('static-sections').style.display = 'block';
-                document.getElementById('off-results').style.display = 'none';
+                // empty search — show the prompt again
+                document.getElementById('food-content').innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">🔍</div>
+                        <p>Search for a food to get started</p>
+                    </div>`;
                 return;
             }
 
-            // Hide static sections while searching
-            document.getElementById('static-sections').style.display = 'none';
-            document.getElementById('off-results').style.display = 'block';
-            document.getElementById('off-results').innerHTML =
-                '<div class="empty-state">Searching...</div>';
+            document.getElementById('food-content').innerHTML =
+                '<div class="empty-state"><p>Searching...</p></div>';
 
-            // Wait 400ms after the user stops typing before hitting the API
+            // wait 400ms after the user stops typing before hitting the API
             searchTimer = setTimeout(() => searchOpenFoodFacts(q), 400);
         }
 
-        // ── Fetch from OpenFoodFacts via Flask (avoids CORS) ─────────────
+        // ── Fetch results via Flask (avoids CORS) ─────────────────────────
         async function searchOpenFoodFacts(q) {
             try {
-                // Call our own Flask endpoint — it fetches from OpenFoodFacts server-side
-                const res  = await fetch(`/api/search-food?q=${encodeURIComponent(q)}`);
+                const res   = await fetch(`/api/search-food?q=${encodeURIComponent(q)}`);
                 const valid = await res.json();
 
                 if (!valid.length) {
-                    document.getElementById('off-results').innerHTML =
-                        '<div class="empty-state">No results found — OpenFoodFacts may be temporarily down. Try again in a minute.</div>';
+                    document.getElementById('food-content').innerHTML =
+                        '<div class="empty-state"><p>No results found. Try a different search.</p></div>';
                     return;
                 }
 
-                // Store results so addOFFFood() can read them by index
                 window._offResults = valid;
 
                 const html = valid.map((p, i) => {
@@ -372,42 +343,28 @@
                         </div>`;
                 }).join('');
 
-                document.getElementById('off-results').innerHTML =
+                document.getElementById('food-content').innerHTML =
                     `<div class="section-header">RESULTS FROM OPENFOODFACTS</div>` + html;
 
             } catch (e) {
-                document.getElementById('off-results').innerHTML =
-                    '<div class="empty-state">Search failed. Make sure Flask is running.</div>';
-            }
-        }
-
-        // ── Add a static (DB) food ────────────────────────────────────────
-        function addStaticFood(foodId) {
-            if (mealType) {
-                addStaticToLog(foodId, mealType);
-            } else {
-                pendingFoodId  = foodId;
-                pendingOFFFood = null;
-                document.getElementById('meal-modal').style.display = 'flex';
+                document.getElementById('food-content').innerHTML =
+                    '<div class="empty-state"><p>Search failed. Make sure Flask is running.</p></div>';
             }
         }
 
         // ── Add an OpenFoodFacts food ─────────────────────────────────────
         function addOFFFood(index) {
-            const p = window._offResults[index];
-            const n = p.nutriments;
+            const p     = window._offResults[index];
             const grams = parseFloat(document.getElementById(`grams-${index}`).value) || 100;
 
-            // Bundle up everything we need to send to the server
             pendingOFFFood = {
-                name:    p.product_name,
-                calories: n['energy-kcal_100g'] ?? 0,
-                protein:  n['proteins_100g'] ?? 0,
-                carbs:    n['carbohydrates_100g'] ?? 0,
-                fat:      n['fat_100g'] ?? 0,
+                name:     p.name,
+                calories: p.calories,
+                protein:  p.protein,
+                carbs:    p.carbs,
+                fat:      p.fat,
                 grams:    grams
             };
-            pendingFoodId = null;
 
             if (mealType) {
                 addOFFToLog(pendingOFFFood, mealType);
@@ -416,43 +373,20 @@
             }
         }
 
-        // ── Modal confirm — works for both food types ─────────────────────
+        // ── Modal confirm ─────────────────────────────────────────────────
         function confirmMeal() {
             const meal = document.getElementById('meal-select').value;
-            const offFood = pendingOFFFood;
-            const staticId = pendingFoodId;
+            const food = pendingOFFFood;
             closeModal();
-
-            if (offFood) {
-                addOFFToLog(offFood, meal);
-            } else if (staticId) {
-                addStaticToLog(staticId, meal);
-            }
+            if (food) addOFFToLog(food, meal);
         }
 
         function closeModal() {
             document.getElementById('meal-modal').style.display = 'none';
-            pendingFoodId  = null;
             pendingOFFFood = null;
         }
 
-        // ── POST a static DB food to /api/add-food ────────────────────────
-        function addStaticToLog(foodId, meal) {
-            fetch('/api/add-food', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    food_id:   foodId,
-                    meal_type: meal,
-                    servings:  1,
-                    date:      logDate || undefined
-                })
-            })
-            .then(r => r.json())
-            .then(() => redirectAfterAdd());
-        }
-
-        // ── POST an OpenFoodFacts food to /api/add-openfood ───────────────
+        // ── POST food to Flask ────────────────────────────────────────────
         function addOFFToLog(food, meal) {
             fetch('/api/add-openfood', {
                 method: 'POST',
