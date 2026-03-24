@@ -1,4 +1,4 @@
-# Updated fitbro.py with authentication
+# Updated fitbro.py with authentication + OpenFoodFacts fallback search
 
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 import sqlite3
@@ -9,6 +9,10 @@ import requests as http  # for calling OpenFoodFacts server-side
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
+
+# How long to wait for each API before giving up (seconds)
+# Set low so the fallback kicks in quickly if the primary is slow
+OFF_TIMEOUT = 5
 
 def get_db():
     conn = sqlite3.connect('fitness.db')
@@ -159,9 +163,57 @@ def add_food_api():
     conn.close()
     return jsonify({'success': True})
 
-# ── NEW: Search OpenFoodFacts from the server so the browser avoids CORS ─────
-# The frontend calls this instead of hitting OpenFoodFacts directly.
-# Flask makes the request and passes the results back as JSON.
+
+# ── Helper: score how closely a name matches the search query ────────────────
+# Lower score = better match, so we can sort ascending
+# 0 = exact match, 1 = name starts with query, 2 = query appears in name
+def match_score(name, query):
+    n = name.lower()
+    q = query.lower()
+    if n == q:
+        return 0
+    if n.startswith(q):
+        return 1
+    return 2
+
+
+# ── Helper: parse + filter + sort results ────────────────────────────────────
+# Only keeps products whose name actually contains the search query —
+# this is what removes French results like "Chaussons aux pommes" when
+# the user searched "apple", since the name doesn't contain "apple" at all
+def parse_and_sort(products, query):
+    results = []
+    q = query.lower()
+
+    for p in products:
+        name = p.get('product_name', '').strip()
+        nutrients = p.get('nutriments', {})
+
+        # skip if no name, no calories, or name doesn't contain the query word
+        if not name or not nutrients.get('energy-kcal_100g'):
+            continue
+        if q not in name.lower():
+            continue
+
+        results.append({
+            'name':     name,
+            'calories': nutrients.get('energy-kcal_100g', 0),
+            'protein':  nutrients.get('proteins_100g', 0),
+            'carbs':    nutrients.get('carbohydrates_100g', 0),
+            'fat':      nutrients.get('fat_100g', 0),
+            'brand':    p.get('brands', '')
+        })
+
+    # sort so closest match comes first
+    results.sort(key=lambda r: match_score(r['name'], query))
+    return results
+
+
+# ── Search OpenFoodFacts — tries primary first, falls back if it's down ───────
+# The primary search API (/cgi/search.pl) has known reliability issues
+# (around 94% uptime, very slow response times).
+# If it times out or fails, we fall back to search.openfoodfacts.org
+# which sits at 100% uptime.
 @app.route('/api/search-food')
 @login_required
 def search_food():
@@ -169,50 +221,82 @@ def search_food():
     if not q:
         return jsonify([])
 
-    # OpenFoodFacts blocks requests with no User-Agent, so we set one
-    res = http.get(
-        'https://world.openfoodfacts.org/cgi/search.pl',
-        params={
-            'search_terms': q,
-            'json':         'true',
-            'page_size':    10,
-            'fields':       'product_name,nutriments,brands'
-        },
-        headers={'User-Agent': 'FitBro-App/1.0'},
-        timeout=8
-    )
-    products = res.json().get('products', [])
+    headers = {'User-Agent': 'FitBro-FinalYearProject/1.0'}
 
-    # Only return products that have a name and calorie data
-    valid = [
-        {
-            'name':     p['product_name'],
-            'calories': p['nutriments'].get('energy-kcal_100g', 0),
-            'protein':  p['nutriments'].get('proteins_100g', 0),
-            'carbs':    p['nutriments'].get('carbohydrates_100g', 0),
-            'fat':      p['nutriments'].get('fat_100g', 0),
-            'brand':    p.get('brands', '')
-        }
-        for p in products
-        if p.get('product_name') and p.get('nutriments', {}).get('energy-kcal_100g')
-    ]
+    # ── Step 1: Try the primary search API ───────────────────────────────────
+    try:
+        res = http.get(
+            'https://world.openfoodfacts.org/cgi/search.pl',
+            params={
+                'action':       'process',
+                'search_terms': q,
+                'json':         '1',
+                'page_size':    10,
+                'fields':       'product_name,nutriments,brands',
+                'lc':           'en',  # return English product names only
+                'cc':           'gb'   # prioritise UK products
+            },
+            headers=headers,
+            timeout=OFF_TIMEOUT,  # give up after 5 seconds
+            verify=False
+        )
+        print('Primary API status:', res.status_code)
 
-    return jsonify(valid)
+        if res.status_code == 200:
+            products = res.json().get('products', [])
+            valid = parse_and_sort(products, q)
+
+            # only return primary results if we actually got something back
+            if valid:
+                return jsonify(valid)
+            
+            print('Primary returned no valid results, trying fallback...')
+
+    except Exception as e:
+        # timed out or connection error — move straight to fallback
+        print(f'Primary API failed ({e}), trying fallback...')
+
+    # ── Step 2: Fallback to the dedicated search service ─────────────────────
+    try:
+        res = http.get(
+            'https://search.openfoodfacts.org/search',
+            params={
+                'q':          q,
+                'page_size':  10,
+                'fields':     'product_name,nutriments,brands',
+                'lang':       'en',  # English names only
+                'cc':         'gb'   # UK products
+            },
+            headers=headers,
+            timeout=OFF_TIMEOUT,
+            verify=False
+        )
+        print('Fallback API status:', res.status_code)
+
+        if res.status_code == 200:
+            # fallback uses "hits" as its key instead of "products"
+            products = res.json().get('hits', [])
+            valid = parse_and_sort(products, q)
+            return jsonify(valid)
+
+    except Exception as e:
+        print(f'Fallback API also failed: {e}')
+
+    # both APIs failed — return empty so the frontend shows "no results"
+    return jsonify([])
 # ─────────────────────────────────────────────────────────────────────────────
 
-# ── NEW: Save an OpenFoodFacts food and log it in one go ──────────────────────
-# The frontend sends the food's nutritional info (per 100g) + how many grams
-# the user wants to log. We save the food to the foods table if it's new,
-# then create a food_log entry with servings = grams / 100.
+
+# ── Save an OpenFoodFacts food and log it in one go ───────────────────────────
 @app.route('/api/add-openfood', methods=['POST'])
 @login_required
 def add_openfood():
     data = request.json
     name      = data['name']
-    calories  = round(data['calories'])   # per 100g
-    protein   = data['protein']           # per 100g
-    carbs     = data['carbs']             # per 100g
-    fat       = data['fat']               # per 100g
+    calories  = round(data['calories'])
+    protein   = data['protein']
+    carbs     = data['carbs']
+    fat       = data['fat']
     grams     = float(data.get('grams', 100))
     meal_type = data['meal_type']
     log_date  = data.get('date', str(date.today()))
@@ -220,14 +304,12 @@ def add_openfood():
     conn = get_db()
     cursor = conn.cursor()
 
-    # Check if this food already exists so we don't add duplicates
     cursor.execute('SELECT id FROM foods WHERE name = ?', (name,))
     existing = cursor.fetchone()
 
     if existing:
         food_id = existing['id']
     else:
-        # Insert new food — values are stored per 100g, matching the rest of the DB
         cursor.execute('''
             INSERT INTO foods (name, calories, protein, carbs, fat, serving_size)
             VALUES (?, ?, ?, ?, ?, ?)
