@@ -252,7 +252,6 @@
             </div>
         </div>
 
-        <!-- Empty state shown on load, replaced once user types -->
         <div class="content" id="food-content">
             <div class="empty-state">
                 <div class="icon">🔍</div>
@@ -277,6 +276,8 @@
         let pendingOFFFood = null;
         let searchTimer = null;
 
+
+
         function navigate(path) { window.location.href = path; }
 
         function goBack() {
@@ -288,11 +289,9 @@
         // ── Search input handler ──────────────────────────────────────────
         function onSearchInput() {
             const q = document.getElementById('search-input').value.trim();
-
             clearTimeout(searchTimer);
 
             if (!q) {
-                // empty search — show the prompt again
                 document.getElementById('food-content').innerHTML = `
                     <div class="empty-state">
                         <div class="icon">🔍</div>
@@ -304,7 +303,7 @@
             document.getElementById('food-content').innerHTML =
                 '<div class="empty-state"><p>Searching...</p></div>';
 
-            // wait 400ms after the user stops typing before hitting the API
+            // hit the API after the user stops typing for 400ms
             searchTimer = setTimeout(() => searchOpenFoodFacts(q), 400);
         }
 
@@ -386,7 +385,7 @@
             pendingOFFFood = null;
         }
 
-        // ── POST food to Flask ────────────────────────────────────────────
+        // ── POST an OpenFoodFacts food to /api/add-openfood ───────────────
         function addOFFToLog(food, meal) {
             fetch('/api/add-openfood', {
                 method: 'POST',

@@ -165,22 +165,46 @@ def add_food_api():
 
 
 # ── Helper: score how closely a name matches the search query ────────────────
-# Lower score = better match, so we can sort ascending
-# 0 = exact match, 1 = name starts with query, 2 = query appears in name
+# Lower score = better match, so we can sort ascending.
+# Penalises results that contain flavour/seasoning words so that
+# "Chicken Breast" always ranks above "Chicken Curry Flavour"
+FLAVOUR_WORDS = {
+    # flavour descriptors
+    'flavour', 'flavoured', 'flavor', 'flavored',
+    'seasoned', 'seasoning', 'spiced', 'spicy',
+    'style', 'taste', 'infused', 'marinated',
+    'curry', 'bbq', 'sweet', 'smoky', 'smoked',
+    # processed/drink products
+    'juice', 'drink', 'beverage', 'smoothie',
+    'sauce', 'extract', 'syrup', 'concentrate',
+    'organic', 'organics', '100%',
+    # branded filler words that bloat product names
+    'eve', 'llc', 'inc', '&'
+}
+
 def match_score(name, query):
-    n = name.lower()
-    q = query.lower()
+    n     = name.lower()
+    q     = query.lower()
+    words = set(n.split())
+
+    # exact match — best possible
     if n == q:
         return 0
+
+    has_flavour_word = bool(words & FLAVOUR_WORDS)
+
     if n.startswith(q):
-        return 1
-    return 2
+        # starts with the query but contains a flavour word — push it down
+        return 1 if not has_flavour_word else 3
+
+    # query appears somewhere in the name
+    return 2 if not has_flavour_word else 4
 
 
 # ── Helper: parse + filter + sort results ────────────────────────────────────
 # Only keeps products whose name actually contains the search query —
-# this is what removes French results like "Chaussons aux pommes" when
-# the user searched "apple", since the name doesn't contain "apple" at all
+# this removes irrelevant results like flavoured products appearing
+# when the user searched for a specific ingredient
 def parse_and_sort(products, query):
     results = []
     q = query.lower()
@@ -210,10 +234,10 @@ def parse_and_sort(products, query):
 
 
 # ── Search OpenFoodFacts — tries primary first, falls back if it's down ───────
-# The primary search API (/cgi/search.pl) has known reliability issues
-# (around 94% uptime, very slow response times).
-# If it times out or fails, we fall back to search.openfoodfacts.org
-# which sits at 100% uptime.
+# The primary search API (/cgi/search.pl) has known reliability issues.
+# If it times out or fails, we fall back to search.openfoodfacts.org.
+# Results are sorted by unique_scans_n (most scanned = most popular/common foods)
+# so well known items like "Chicken Breast" appear above niche branded products.
 @app.route('/api/search-food')
 @login_required
 def search_food():
@@ -231,7 +255,8 @@ def search_food():
                 'action':       'process',
                 'search_terms': q,
                 'json':         '1',
-                'page_size':    10,
+                'page_size':    25,
+                'sort_by':      'unique_scans_n',  # most scanned = most common foods first
                 'fields':       'product_name,nutriments,brands',
                 'lc':           'en',  # return English product names only
                 'cc':           'gb'   # prioritise UK products
@@ -249,7 +274,7 @@ def search_food():
             # only return primary results if we actually got something back
             if valid:
                 return jsonify(valid)
-            
+
             print('Primary returned no valid results, trying fallback...')
 
     except Exception as e:
@@ -262,7 +287,7 @@ def search_food():
             'https://search.openfoodfacts.org/search',
             params={
                 'q':          q,
-                'page_size':  10,
+                'page_size':  25,
                 'fields':     'product_name,nutriments,brands',
                 'lang':       'en',  # English names only
                 'cc':         'gb'   # UK products
