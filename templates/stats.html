@@ -2,12 +2,9 @@
 <html>
 <head>
     <title>FitBro - Diary</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -30,7 +27,6 @@
             flex-direction: column;
         }
 
-        /* ── Header ── */
         .header {
             background: linear-gradient(135deg, #48c774, #3ab566);
             padding: 30px 25px;
@@ -38,18 +34,9 @@
             flex-shrink: 0;
         }
 
-        .header h1 {
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 3px;
-        }
+        .header h1 { font-size: 28px; font-weight: 600; margin-bottom: 3px; }
+        .header p  { font-size: 14px; opacity: 0.9; }
 
-        .header p {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-
-        /* ── Scrollable content ── */
         .content {
             flex: 1;
             overflow-y: auto;
@@ -57,7 +44,6 @@
             padding: 15px;
         }
 
-        /* ── Calendar card ── */
         .card {
             background: white;
             border-radius: 20px;
@@ -73,11 +59,7 @@
             margin-bottom: 14px;
         }
 
-        .cal-header h2 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #2c3e50;
-        }
+        .cal-header h2 { font-size: 16px; font-weight: 600; color: #2c3e50; }
 
         .nav-btn {
             background: #f0f9f4;
@@ -130,13 +112,9 @@
             border: 2px solid transparent;
         }
 
-        .cal-day:hover { background: #f0f9f4; transform: scale(1.08); }
-        .cal-day.empty { cursor: default; pointer-events: none; }
-
-        .cal-day.today {
-            border-color: #48c774;
-            font-weight: 700;
-        }
+        .cal-day:hover  { background: #f0f9f4; transform: scale(1.08); }
+        .cal-day.empty  { cursor: default; pointer-events: none; }
+        .cal-day.today  { border-color: #48c774; font-weight: 700; }
 
         .cal-day.selected {
             background: linear-gradient(135deg, #48c774, #3ab566);
@@ -157,13 +135,8 @@
         }
 
         .cal-day.selected .dot { background: rgba(255,255,255,0.8); }
+        .cal-day.future { color: #bdc3c7; pointer-events: none; }
 
-        .cal-day.future {
-            color: #bdc3c7;
-            pointer-events: none;
-        }
-
-        /* ── Day detail card ── */
         #detail-panel { display: none; }
         #detail-panel.visible { display: block; }
 
@@ -174,11 +147,7 @@
             margin-bottom: 14px;
         }
 
-        .detail-header h3 {
-            font-size: 15px;
-            font-weight: 600;
-            color: #2c3e50;
-        }
+        .detail-header h3 { font-size: 15px; font-weight: 600; color: #2c3e50; }
 
         .meal-pick-btn {
             padding: 10px;
@@ -191,10 +160,8 @@
             cursor: pointer;
             transition: background 0.2s, border-color 0.2s;
         }
-        .meal-pick-btn:hover {
-            background: #d4f5e0;
-            border-color: #48c774;
-        }
+
+        .meal-pick-btn:hover { background: #d4f5e0; border-color: #48c774; }
 
         .close-btn {
             background: #f0f9f4;
@@ -207,7 +174,6 @@
             font-weight: 600;
         }
 
-        /* Macro pills */
         .macro-bar {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -222,25 +188,14 @@
             text-align: center;
         }
 
-        .macro-pill .val {
-            font-size: 15px;
-            font-weight: 700;
-        }
-
-        .macro-pill .lbl {
-            font-size: 10px;
-            color: #95a5a6;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            margin-top: 2px;
-        }
+        .macro-pill .val { font-size: 15px; font-weight: 700; }
+        .macro-pill .lbl { font-size: 10px; color: #95a5a6; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
 
         .macro-pill.cal  .val { color: #e67e22; }
         .macro-pill.pro  .val { color: #3498db; }
         .macro-pill.carb .val { color: #9b59b6; }
         .macro-pill.fat  .val { color: #f39c12; }
 
-        /* Meal groups */
         .meal-group { margin-bottom: 12px; }
 
         .meal-group h4 {
@@ -265,61 +220,37 @@
 
         .food-row:hover { background: #f8f9fa; }
 
-        .food-name {
-            font-size: 14px;
-            font-weight: 500;
-            color: #2c3e50;
-        }
+        .food-name     { font-size: 14px; font-weight: 500; color: #2c3e50; }
+        .food-servings { font-size: 12px; color: #95a5a6; margin-top: 1px; }
+        .food-cals     { font-size: 14px; font-weight: 700; color: #48c774; }
 
-        .food-servings {
-            font-size: 12px;
-            color: #95a5a6;
-            margin-top: 1px;
-        }
+        .empty-day-msg { text-align: center; padding: 25px 15px; color: #95a5a6; font-size: 14px; }
+        .loader        { text-align: center; padding: 20px; color: #95a5a6; font-size: 13px; }
 
-        .food-cals {
-            font-size: 14px;
-            font-weight: 700;
-            color: #48c774;
-        }
-
-        .empty-day-msg {
-            text-align: center;
-            padding: 25px 15px;
-            color: #95a5a6;
-            font-size: 14px;
-        }
-
-        .loader {
-            text-align: center;
-            padding: 20px;
-            color: #95a5a6;
-            font-size: 13px;
-        }
-
-        /* ── Bottom nav ── */
         .bottom-nav {
             display: flex;
             justify-content: space-around;
-            padding: 15px 0;
+            padding: 10px 0;
             background: linear-gradient(135deg, #2d6a4f, #1b4332);
             flex-shrink: 0;
         }
 
-        .nav-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.4);
-            transition: all 0.3s;
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.4);
+            font-size: 10px;
             cursor: pointer;
+            padding: 4px 10px;
+            transition: color 0.2s;
         }
 
-        .nav-dot.active {
-            background: white;
-            width: 25px;
-            border-radius: 4px;
-        }
+        .nav-item i { font-size: 18px; }
+        .nav-item.active { color: white; }
     </style>
 </head>
 <body>
@@ -332,7 +263,6 @@
 
         <div class="content">
 
-            <!-- Calendar card -->
             <div class="card">
                 <div class="cal-header">
                     <button class="nav-btn" id="prev-btn">&#8592;</button>
@@ -346,16 +276,14 @@
                 <div class="cal-grid" id="cal-grid"></div>
             </div>
 
-            <!-- Day detail card (shown on click) -->
             <div class="card" id="detail-panel">
                 <div class="detail-header">
                     <h3 id="detail-date-label"></h3>
-                    <button class="close-btn" id="close-detail">✕ Close</button>
+                    <button class="close-btn" id="close-detail">&#10005; Close</button>
                 </div>
                 <div class="macro-bar" id="macro-bar"></div>
                 <div id="meal-list"></div>
 
-                <!-- Meal picker (shown when "+ Add Food" is tapped) -->
                 <div id="meal-picker" style="display:none; margin-top: 12px;">
                     <p style="font-size:12px; font-weight:600; color:#95a5a6; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">Which meal?</p>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
@@ -367,7 +295,7 @@
                     <button onclick="hideMealPicker()" style="width:100%; margin-top:8px; padding:8px; background:none; border:1px solid #ecf0f1; border-radius:10px; color:#95a5a6; font-size:13px; cursor:pointer;">Cancel</button>
                 </div>
 
-                <button id="add-food-btn" onclick="showMealPicker()" style="display:none; width:100%; margin-top:14px; padding:11px; background: linear-gradient(135deg, #48c774, #3ab566); border:none; border-radius:12px; color:white; font-size:14px; font-weight:600; cursor:pointer; transition: transform 0.2s;">
+                <button id="add-food-btn" onclick="showMealPicker()" style="display:none; width:100%; margin-top:14px; padding:11px; background: linear-gradient(135deg, #48c774, #3ab566); border:none; border-radius:12px; color:white; font-size:14px; font-weight:600; cursor:pointer;">
                     + Add Food to This Day
                 </button>
             </div>
@@ -375,18 +303,17 @@
         </div>
 
         <div class="bottom-nav">
-            <div class="nav-dot" onclick="navigate('/')"></div>
-            <div class="nav-dot" onclick="navigate('/add-food')"></div>
-            <div class="nav-dot active"></div>
-            <div class="nav-dot" onclick="navigate('/community')"></div>
-            <div class="nav-dot" onclick="navigate('/profile')"></div>
+            <button class="nav-item" onclick="navigate('/')"><i class="fas fa-house"></i><span>Home</span></button>
+            <button class="nav-item" onclick="navigate('/add-food')"><i class="fas fa-plus"></i><span>Add</span></button>
+            <button class="nav-item active" onclick="navigate('/stats')"><i class="fas fa-calendar-days"></i><span>Diary</span></button>
+            <button class="nav-item" onclick="navigate('/community')"><i class="fas fa-users"></i><span>Community</span></button>
+            <button class="nav-item" onclick="navigate('/profile')"><i class="fas fa-user"></i><span>Profile</span></button>
         </div>
 
     </div>
 
     <script>
-        const MONTHS = ['January','February','March','April','May','June',
-                        'July','August','September','October','November','December'];
+        const MONTHS     = ['January','February','March','April','May','June','July','August','September','October','November','December'];
         const MEAL_ORDER = ['breakfast','lunch','dinner','snack'];
 
         let loggedDates = {};
@@ -395,10 +322,9 @@
 
         function navigate(path) { window.location.href = path; }
 
-        // ── Load all logged dates ──────────────────────────────────────────
         async function loadLoggedDates() {
             try {
-                const res = await fetch('/api/logged-dates');
+                const res  = await fetch('/api/logged-dates');
                 const data = await res.json();
                 loggedDates = {};
                 data.forEach(d => { loggedDates[d.date] = d.total_calories; });
@@ -406,17 +332,15 @@
             renderCalendar();
         }
 
-        // ── Render calendar ────────────────────────────────────────────────
         function renderCalendar() {
-            document.getElementById('month-label').textContent =
-                `${MONTHS[currentMonth]} ${currentYear}`;
+            document.getElementById('month-label').textContent = `${MONTHS[currentMonth]} ${currentYear}`;
 
-            const grid = document.getElementById('cal-grid');
-            grid.innerHTML = '';
+            const grid      = document.getElementById('cal-grid');
+            grid.innerHTML  = '';
 
-            const today = new Date();
-            const todayStr = toDateStr(today);
-            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const today       = new Date();
+            const todayStr    = toDateStr(today);
+            const firstDay    = new Date(currentYear, currentMonth, 1).getDay();
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
             for (let i = 0; i < firstDay; i++) {
@@ -427,8 +351,8 @@
 
             for (let d = 1; d <= daysInMonth; d++) {
                 const dateStr = toDateStr(new Date(currentYear, currentMonth, d));
-                const cell = document.createElement('div');
-                cell.className = 'cal-day';
+                const cell    = document.createElement('div');
+                cell.className  = 'cal-day';
                 cell.textContent = d;
 
                 if (dateStr === todayStr)     cell.classList.add('today');
@@ -454,7 +378,6 @@
             return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         }
 
-        // ── Select a day ───────────────────────────────────────────────────
         async function selectDay(dateStr) {
             selectedDate = dateStr;
             renderCalendar();
@@ -467,36 +390,33 @@
                 weekday: 'long', day: 'numeric', month: 'long'
             });
             document.getElementById('detail-date-label').textContent = nice;
-            document.getElementById('macro-bar').innerHTML = '<div class="loader">Loading…</div>';
-            document.getElementById('meal-list').innerHTML = '';
+            document.getElementById('macro-bar').innerHTML  = '<div class="loader">Loading...</div>';
+            document.getElementById('meal-list').innerHTML  = '';
 
             try {
-                const res = await fetch(`/api/food-log/${dateStr}`);
+                const res   = await fetch(`/api/food-log/${dateStr}`);
                 const foods = await res.json();
                 renderDayDetail(foods);
             } catch(e) {
                 document.getElementById('macro-bar').innerHTML = '';
-                document.getElementById('meal-list').innerHTML =
-                    '<div class="empty-day-msg">Could not load data.</div>';
+                document.getElementById('meal-list').innerHTML = '<div class="empty-day-msg">Could not load data.</div>';
             }
 
             panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-            // Show/hide add button — only for today or past days
-            const addBtn = document.getElementById('add-food-btn');
-            const today = new Date(); today.setHours(23,59,59);
-            const isNotFuture = new Date(y, m-1, d) <= today;
-            addBtn.style.display = isNotFuture ? 'block' : 'none';
+            const addBtn  = document.getElementById('add-food-btn');
+            const todayDt = new Date(); todayDt.setHours(23,59,59);
+            addBtn.style.display = new Date(y, m-1, d) <= todayDt ? 'block' : 'none';
             hideMealPicker();
         }
 
         function showMealPicker() {
-            document.getElementById('meal-picker').style.display = 'block';
-            document.getElementById('add-food-btn').style.display = 'none';
+            document.getElementById('meal-picker').style.display   = 'block';
+            document.getElementById('add-food-btn').style.display  = 'none';
         }
 
         function hideMealPicker() {
-            document.getElementById('meal-picker').style.display = 'none';
+            document.getElementById('meal-picker').style.display  = 'none';
             if (selectedDate) document.getElementById('add-food-btn').style.display = 'block';
         }
 
@@ -504,14 +424,13 @@
             window.location.href = `/add-food?meal=${meal}&date=${selectedDate}`;
         }
 
-        // ── Render day detail ──────────────────────────────────────────────
         function renderDayDetail(foods) {
             const macroBar = document.getElementById('macro-bar');
             const mealList = document.getElementById('meal-list');
 
             if (!foods.length) {
                 macroBar.innerHTML = '';
-                mealList.innerHTML = '<div class="empty-day-msg">😴 Nothing logged on this day.</div>';
+                mealList.innerHTML = '<div class="empty-day-msg">Nothing logged on this day.</div>';
                 return;
             }
 
@@ -563,7 +482,7 @@
                     row.innerHTML = `
                         <div>
                             <div class="food-name">${f.name}</div>
-                            <div class="food-servings">${f.servings}× serving</div>
+                            <div class="food-servings">${f.servings}x serving</div>
                         </div>
                         <div class="food-cals">${f.total_calories} cal</div>`;
                     group.appendChild(row);
@@ -573,7 +492,6 @@
             });
         }
 
-        // ── Nav buttons ────────────────────────────────────────────────────
         document.getElementById('prev-btn').addEventListener('click', () => {
             currentMonth--;
             if (currentMonth < 0) { currentMonth = 11; currentYear--; }
@@ -594,8 +512,7 @@
             renderCalendar();
         });
 
-        // ── Init ───────────────────────────────────────────────────────────
-        const now = new Date();
+        const now    = new Date();
         currentYear  = now.getFullYear();
         currentMonth = now.getMonth();
         loadLoggedDates();

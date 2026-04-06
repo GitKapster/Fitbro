@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>FitBro - Add Food</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -137,21 +138,27 @@
         .bottom-nav {
             display: flex;
             justify-content: space-around;
-            padding: 15px 0;
+            padding: 10px 0;
             background: linear-gradient(135deg, #2d6a4f, #1b4332);
             flex-shrink: 0;
         }
 
-        .nav-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.4);
-            transition: all 0.3s;
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.4);
+            font-size: 10px;
             cursor: pointer;
+            padding: 4px 10px;
+            transition: color 0.2s;
         }
 
-        .nav-dot.active { background: white; width: 25px; border-radius: 4px; }
+        .nav-item i { font-size: 18px; }
+        .nav-item.active { color: white; }
 
         .empty-state {
             text-align: center;
@@ -162,7 +169,6 @@
         .empty-state .icon { font-size: 40px; margin-bottom: 10px; }
         .empty-state p { font-size: 14px; }
 
-        /* Meal picker modal */
         .modal {
             display: none;
             position: absolute;
@@ -221,7 +227,6 @@
 <body>
     <div class="phone-frame">
 
-        <!-- Meal picker modal -->
         <div class="modal" id="meal-modal">
             <div class="modal-box">
                 <p>Which meal?</p>
@@ -238,16 +243,11 @@
 
         <div class="header">
             <div class="header-top">
-                <button class="back-button" onclick="goBack()">‹</button>
+                <button class="back-button" onclick="goBack()">&#8249;</button>
                 <div class="search-container">
                     <span class="search-icon">🔍</span>
-                    <input
-                        type="text"
-                        class="search-box"
-                        placeholder="Search any food..."
-                        id="search-input"
-                        oninput="onSearchInput()"
-                    >
+                    <input type="text" class="search-box" placeholder="Search any food..."
+                           id="search-input" oninput="onSearchInput()">
                 </div>
             </div>
         </div>
@@ -260,23 +260,21 @@
         </div>
 
         <div class="bottom-nav">
-            <div class="nav-dot" onclick="navigate('/')"></div>
-            <div class="nav-dot active"></div>
-            <div class="nav-dot" onclick="navigate('/stats')"></div>
-            <div class="nav-dot" onclick="navigate('/community')"></div>
-            <div class="nav-dot" onclick="navigate('/profile')"></div>
+            <button class="nav-item" onclick="navigate('/')"><i class="fas fa-house"></i><span>Home</span></button>
+            <button class="nav-item active" onclick="navigate('/add-food')"><i class="fas fa-plus"></i><span>Add</span></button>
+            <button class="nav-item" onclick="navigate('/stats')"><i class="fas fa-calendar-days"></i><span>Diary</span></button>
+            <button class="nav-item" onclick="navigate('/community')"><i class="fas fa-users"></i><span>Community</span></button>
+            <button class="nav-item" onclick="navigate('/profile')"><i class="fas fa-user"></i><span>Profile</span></button>
         </div>
     </div>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const mealType = urlParams.get('meal');
-        const logDate  = urlParams.get('date');
+        const mealType  = urlParams.get('meal');
+        const logDate   = urlParams.get('date');
 
         let pendingOFFFood = null;
-        let searchTimer = null;
-
-
+        let searchTimer    = null;
 
         function navigate(path) { window.location.href = path; }
 
@@ -286,7 +284,6 @@
             else               window.location.href = '/';
         }
 
-        // ── Search input handler ──────────────────────────────────────────
         function onSearchInput() {
             const q = document.getElementById('search-input').value.trim();
             clearTimeout(searchTimer);
@@ -303,11 +300,9 @@
             document.getElementById('food-content').innerHTML =
                 '<div class="empty-state"><p>Searching...</p></div>';
 
-            // hit the API after the user stops typing for 400ms
             searchTimer = setTimeout(() => searchOpenFoodFacts(q), 400);
         }
 
-        // ── Fetch results via Flask (avoids CORS) ─────────────────────────
         async function searchOpenFoodFacts(q) {
             try {
                 const res   = await fetch(`/api/search-food?q=${encodeURIComponent(q)}`);
@@ -322,10 +317,10 @@
                 window._offResults = valid;
 
                 const html = valid.map((p, i) => {
-                    const cal  = Math.round(p.calories ?? 0);
-                    const pro  = (p.protein ?? 0).toFixed(1);
-                    const carb = (p.carbs   ?? 0).toFixed(1);
-                    const fat  = (p.fat     ?? 0).toFixed(1);
+                    const cal   = Math.round(p.calories ?? 0);
+                    const pro   = (p.protein ?? 0).toFixed(1);
+                    const carb  = (p.carbs   ?? 0).toFixed(1);
+                    const fat   = (p.fat     ?? 0).toFixed(1);
                     const brand = p.brand ? ` · ${p.brand}` : '';
 
                     return `
@@ -351,7 +346,6 @@
             }
         }
 
-        // ── Add an OpenFoodFacts food ─────────────────────────────────────
         function addOFFFood(index) {
             const p     = window._offResults[index];
             const grams = parseFloat(document.getElementById(`grams-${index}`).value) || 100;
@@ -372,7 +366,6 @@
             }
         }
 
-        // ── Modal confirm ─────────────────────────────────────────────────
         function confirmMeal() {
             const meal = document.getElementById('meal-select').value;
             const food = pendingOFFFood;
@@ -385,7 +378,6 @@
             pendingOFFFood = null;
         }
 
-        // ── POST an OpenFoodFacts food to /api/add-openfood ───────────────
         function addOFFToLog(food, meal) {
             fetch('/api/add-openfood', {
                 method: 'POST',
@@ -405,7 +397,6 @@
             .then(() => redirectAfterAdd());
         }
 
-        // ── Go back to wherever the user came from ────────────────────────
         function redirectAfterAdd() {
             if (logDate)       window.location.href = '/stats';
             else if (mealType) window.location.href = `/meal/${mealType}`;
