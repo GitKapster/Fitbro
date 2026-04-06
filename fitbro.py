@@ -109,9 +109,8 @@ def stats():
 
 
 @app.route('/community')
-@login_required
 def community():
-    return render_template('community.html')
+    return render_template('nutribot.html')
 
 
 @app.route('/profile')
@@ -173,6 +172,32 @@ def add_food_api():
     conn.commit()
     conn.close()
     return jsonify({'success': True})
+
+
+# returns the last 7 days of nutrition totals grouped by date
+# used by the NutriBot page to analyse the users recent eating habits
+@app.route('/api/nutrition-summary')
+@login_required
+def nutrition_summary():
+    conn = get_db()
+    cursor = conn.cursor()
+    user_id = session['user_id']
+    cursor.execute('''
+        SELECT fl.date,
+               ROUND(SUM(f.calories * fl.servings))      as total_calories,
+               ROUND(SUM(f.protein  * fl.servings), 1)   as total_protein,
+               ROUND(SUM(f.carbs    * fl.servings), 1)   as total_carbs,
+               ROUND(SUM(f.fat      * fl.servings), 1)   as total_fat
+        FROM food_log fl
+        JOIN foods f ON fl.food_id = f.id
+        WHERE fl.user_id = ?
+        AND fl.date >= date('now', '-6 days')
+        GROUP BY fl.date
+        ORDER BY fl.date DESC
+    ''', (user_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
 
 
 # words that suggest a food is processed or not a basic ingredient
@@ -377,10 +402,10 @@ def get_food_log_by_date(date_str):
     cursor.execute('''
         SELECT f.name, f.calories, f.protein, f.carbs, f.fat,
                fl.meal_type, fl.servings,
-               ROUND(f.calories * fl.servings) as total_calories,
-               ROUND(f.protein  * fl.servings, 1) as total_protein,
-               ROUND(f.carbs    * fl.servings, 1) as total_carbs,
-               ROUND(f.fat      * fl.servings, 1) as total_fat
+               ROUND(f.calories * fl.servings)      as total_calories,
+               ROUND(f.protein  * fl.servings, 1)   as total_protein,
+               ROUND(f.carbs    * fl.servings, 1)   as total_carbs,
+               ROUND(f.fat      * fl.servings, 1)   as total_fat
         FROM food_log fl
         JOIN foods f ON fl.food_id = f.id
         WHERE fl.date = ? AND fl.user_id = ?
