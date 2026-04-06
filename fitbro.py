@@ -1,24 +1,23 @@
-# Updated fitbro.py with authentication + OpenFoodFacts fallback search
-
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 import sqlite3
 from datetime import date
 from werkzeug.security import generate_password_hash, check_password_hash
 import secrets
-import requests as http  # for calling OpenFoodFacts server-side
+import requests as http
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
-# How long to wait for each API before giving up (seconds)
-# Set low so the fallback kicks in quickly if the primary is slow
 OFF_TIMEOUT = 5
+
 
 def get_db():
     conn = sqlite3.connect('fitness.db')
     conn.row_factory = sqlite3.Row
     return conn
 
+
+# checks if the user is logged in before letting them access a page
 def login_required(f):
     def wrapper(*args, **kwargs):
         if 'user_id' not in session:
@@ -26,6 +25,7 @@ def login_required(f):
         return f(*args, **kwargs)
     wrapper.__name__ = f.__name__
     return wrapper
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -45,6 +45,7 @@ def login():
         else:
             return jsonify({'success': False, 'error': 'Invalid email or password'})
     return render_template('login.html')
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -76,40 +77,48 @@ def register():
         return jsonify({'success': True})
     return render_template('register.html')
 
+
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
 
 @app.route('/')
 @login_required
 def home():
     return render_template('dashboard.html')
 
+
 @app.route('/add-food')
 @login_required
 def add_food_page():
     return render_template('add_food.html')
+
 
 @app.route('/meal/<meal_type>')
 @login_required
 def meal_detail(meal_type):
     return render_template('meal_detail.html', meal_type=meal_type)
 
+
 @app.route('/stats')
 @login_required
 def stats():
     return render_template('stats.html')
+
 
 @app.route('/community')
 @login_required
 def community():
     return render_template('community.html')
 
+
 @app.route('/profile')
 @login_required
 def profile():
     return render_template('profile.html')
+
 
 @app.route('/api/food-log')
 @login_required
@@ -129,6 +138,7 @@ def get_food_log():
     conn.close()
     return jsonify([dict(food) for food in foods])
 
+
 @app.route('/api/meal/<meal_type>')
 @login_required
 def get_meal_foods(meal_type):
@@ -147,6 +157,7 @@ def get_meal_foods(meal_type):
     conn.close()
     return jsonify([dict(food) for food in foods])
 
+
 @app.route('/api/add-food', methods=['POST'])
 @login_required
 def add_food_api():
@@ -164,47 +175,50 @@ def add_food_api():
     return jsonify({'success': True})
 
 
-# ── Helper: score how closely a name matches the search query ────────────────
-# Lower score = better match, so we can sort ascending.
-# Penalises results that contain flavour/seasoning words so that
-# "Chicken Breast" always ranks above "Chicken Curry Flavour"
-FLAVOUR_WORDS = {
-    # flavour descriptors
+# words that suggest a food is processed or not a basic ingredient
+# results containing these words get pushed lower in the search rankings
+PROCESSED_WORDS = {
     'flavour', 'flavoured', 'flavor', 'flavored',
     'seasoned', 'seasoning', 'spiced', 'spicy',
     'style', 'taste', 'infused', 'marinated',
     'curry', 'bbq', 'sweet', 'smoky', 'smoked',
-    # processed/drink products
     'juice', 'drink', 'beverage', 'smoothie',
     'sauce', 'extract', 'syrup', 'concentrate',
-    'organic', 'organics', '100%',
-    # branded filler words that bloat product names
-    'eve', 'llc', 'inc', '&'
+    'instant', 'ready', 'frozen', 'tinned', 'canned',
+    'processed', 'reformed', 'coated', 'breaded',
+    'powder', 'mix', 'blend', 'composite',
+    'noodles', 'soup', 'chips', 'crisps', 'snack',
+    'nuggets', 'fingers', 'bites', 'strips',
+    'bar', 'biscuit', 'cookie', 'cake', 'crackers',
+    'spread', 'dip', 'paste',
+    'organic', 'organics', '100%', 'eve', 'llc', 'inc', '&'
 }
 
+
+# gives each result a score based on how well it matches what the user typed
+# returns two numbers as a pair so results sort by match quality first
+# then by name length, shorter names rank higher within the same quality level
+# score 0 exact match, 1 starts with query and is a whole food
+# score 2 query is somewhere in the name and is a whole food
+# score 3 starts with query but contains processed food words
+# score 4 query is somewhere in the name and contains processed food words
 def match_score(name, query):
-    n     = name.lower()
-    q     = query.lower()
+    n = name.lower()
+    q = query.lower()
     words = set(n.split())
+    word_count = len(n.split())
+    has_processed = bool(words & PROCESSED_WORDS)
 
-    # exact match — best possible
     if n == q:
-        return 0
-
-    has_flavour_word = bool(words & FLAVOUR_WORDS)
-
+        return (0, word_count)
     if n.startswith(q):
-        # starts with the query but contains a flavour word — push it down
-        return 1 if not has_flavour_word else 3
-
-    # query appears somewhere in the name
-    return 2 if not has_flavour_word else 4
+        return (1, word_count) if not has_processed else (3, word_count)
+    return (2, word_count) if not has_processed else (4, word_count)
 
 
-# ── Helper: parse + filter + sort results ────────────────────────────────────
-# Only keeps products whose name actually contains the search query —
-# this removes irrelevant results like flavoured products appearing
-# when the user searched for a specific ingredient
+# filters out results with no name or no calories
+# also removes anything where the query word is not actually in the name
+# then sorts everything so the best matches come first
 def parse_and_sort(products, query):
     results = []
     q = query.lower()
@@ -213,7 +227,6 @@ def parse_and_sort(products, query):
         name = p.get('product_name', '').strip()
         nutrients = p.get('nutriments', {})
 
-        # skip if no name, no calories, or name doesn't contain the query word
         if not name or not nutrients.get('energy-kcal_100g'):
             continue
         if q not in name.lower():
@@ -228,16 +241,12 @@ def parse_and_sort(products, query):
             'brand':    p.get('brands', '')
         })
 
-    # sort so closest match comes first
     results.sort(key=lambda r: match_score(r['name'], query))
     return results
 
 
-# ── Search OpenFoodFacts — tries primary first, falls back if it's down ───────
-# The primary search API (/cgi/search.pl) has known reliability issues.
-# If it times out or fails, we fall back to search.openfoodfacts.org.
-# Results are sorted by unique_scans_n (most scanned = most popular/common foods)
-# so well known items like "Chicken Breast" appear above niche branded products.
+# tries the main OpenFoodFacts API first
+# if that fails or returns nothing it tries the backup API
 @app.route('/api/search-food')
 @login_required
 def search_food():
@@ -247,7 +256,6 @@ def search_food():
 
     headers = {'User-Agent': 'FitBro-FinalYearProject/1.0'}
 
-    # ── Step 1: Try the primary search API ───────────────────────────────────
     try:
         res = http.get(
             'https://world.openfoodfacts.org/cgi/search.pl',
@@ -256,63 +264,51 @@ def search_food():
                 'search_terms': q,
                 'json':         '1',
                 'page_size':    25,
-                'sort_by':      'unique_scans_n',  # most scanned = most common foods first
+                'sort_by':      'unique_scans_n',
                 'fields':       'product_name,nutriments,brands',
-                'lc':           'en',  # return English product names only
-                'cc':           'gb'   # prioritise UK products
-            },
-            headers=headers,
-            timeout=OFF_TIMEOUT,  # give up after 5 seconds
-            verify=False
-        )
-        print('Primary API status:', res.status_code)
-
-        if res.status_code == 200:
-            products = res.json().get('products', [])
-            valid = parse_and_sort(products, q)
-
-            # only return primary results if we actually got something back
-            if valid:
-                return jsonify(valid)
-
-            print('Primary returned no valid results, trying fallback...')
-
-    except Exception as e:
-        # timed out or connection error — move straight to fallback
-        print(f'Primary API failed ({e}), trying fallback...')
-
-    # ── Step 2: Fallback to the dedicated search service ─────────────────────
-    try:
-        res = http.get(
-            'https://search.openfoodfacts.org/search',
-            params={
-                'q':          q,
-                'page_size':  25,
-                'fields':     'product_name,nutriments,brands',
-                'lang':       'en',  # English names only
-                'cc':         'gb'   # UK products
+                'lc':           'en',
+                'cc':           'gb'
             },
             headers=headers,
             timeout=OFF_TIMEOUT,
             verify=False
         )
-        print('Fallback API status:', res.status_code)
-
         if res.status_code == 200:
-            # fallback uses "hits" as its key instead of "products"
+            products = res.json().get('products', [])
+            valid = parse_and_sort(products, q)
+            if valid:
+                return jsonify(valid)
+
+    except Exception as e:
+        print(f'Main API failed: {e}')
+
+    try:
+        res = http.get(
+            'https://search.openfoodfacts.org/search',
+            params={
+                'q':         q,
+                'page_size': 25,
+                'fields':    'product_name,nutriments,brands',
+                'lang':      'en',
+                'cc':        'gb'
+            },
+            headers=headers,
+            timeout=OFF_TIMEOUT,
+            verify=False
+        )
+        if res.status_code == 200:
             products = res.json().get('hits', [])
             valid = parse_and_sort(products, q)
             return jsonify(valid)
 
     except Exception as e:
-        print(f'Fallback API also failed: {e}')
+        print(f'Backup API failed: {e}')
 
-    # both APIs failed — return empty so the frontend shows "no results"
     return jsonify([])
-# ─────────────────────────────────────────────────────────────────────────────
 
 
-# ── Save an OpenFoodFacts food and log it in one go ───────────────────────────
+# saves the food to the foods table if it doesnt exist already
+# then logs it against the users account for the chosen meal
 @app.route('/api/add-openfood', methods=['POST'])
 @login_required
 def add_openfood():
@@ -341,7 +337,7 @@ def add_openfood():
         ''', (name, calories, protein, carbs, fat, '100g'))
         food_id = cursor.lastrowid
 
-    # 1 serving = 100g, so 150g = 1.5 servings
+    # all nutrition values are per 100g so 150g = 1.5 servings
     servings = round(grams / 100, 2)
 
     cursor.execute('''
@@ -351,9 +347,8 @@ def add_openfood():
 
     conn.commit()
     conn.close()
-
     return jsonify({'success': True})
-# ─────────────────────────────────────────────────────────────────────────────
+
 
 @app.route('/api/logged-dates')
 @login_required
@@ -372,6 +367,7 @@ def get_logged_dates():
     conn.close()
     return jsonify([{'date': r['date'], 'total_calories': round(r['total_calories'])} for r in rows])
 
+
 @app.route('/api/food-log/<date_str>')
 @login_required
 def get_food_log_by_date(date_str):
@@ -382,9 +378,9 @@ def get_food_log_by_date(date_str):
         SELECT f.name, f.calories, f.protein, f.carbs, f.fat,
                fl.meal_type, fl.servings,
                ROUND(f.calories * fl.servings) as total_calories,
-               ROUND(f.protein * fl.servings, 1) as total_protein,
-               ROUND(f.carbs   * fl.servings, 1) as total_carbs,
-               ROUND(f.fat     * fl.servings, 1) as total_fat
+               ROUND(f.protein  * fl.servings, 1) as total_protein,
+               ROUND(f.carbs    * fl.servings, 1) as total_carbs,
+               ROUND(f.fat      * fl.servings, 1) as total_fat
         FROM food_log fl
         JOIN foods f ON fl.food_id = f.id
         WHERE fl.date = ? AND fl.user_id = ?
@@ -393,6 +389,7 @@ def get_food_log_by_date(date_str):
     foods = cursor.fetchall()
     conn.close()
     return jsonify([dict(f) for f in foods])
+
 
 @app.route('/api/delete-food/<int:log_id>', methods=['DELETE'])
 @login_required
@@ -405,6 +402,7 @@ def delete_food(log_id):
     conn.close()
     return jsonify({'success': True})
 
+
 @app.route('/api/user')
 @login_required
 def get_user():
@@ -415,6 +413,7 @@ def get_user():
     user = cursor.fetchone()
     conn.close()
     return jsonify(dict(user))
+
 
 if __name__ == '__main__':
     app.run(debug=True)
