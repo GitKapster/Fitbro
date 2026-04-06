@@ -17,12 +17,12 @@
         }
 
         .phone-frame {
-            width: 375px;
+            width: 400px;
             background: white;
             border-radius: 40px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
-            height: 667px;
+            height: 750px;
             display: flex;
             flex-direction: column;
         }
@@ -335,8 +335,8 @@
         function renderCalendar() {
             document.getElementById('month-label').textContent = `${MONTHS[currentMonth]} ${currentYear}`;
 
-            const grid      = document.getElementById('cal-grid');
-            grid.innerHTML  = '';
+            const grid     = document.getElementById('cal-grid');
+            grid.innerHTML = '';
 
             const today       = new Date();
             const todayStr    = toDateStr(today);
@@ -352,7 +352,7 @@
             for (let d = 1; d <= daysInMonth; d++) {
                 const dateStr = toDateStr(new Date(currentYear, currentMonth, d));
                 const cell    = document.createElement('div');
-                cell.className  = 'cal-day';
+                cell.className   = 'cal-day';
                 cell.textContent = d;
 
                 if (dateStr === todayStr)     cell.classList.add('today');
@@ -411,12 +411,12 @@
         }
 
         function showMealPicker() {
-            document.getElementById('meal-picker').style.display   = 'block';
-            document.getElementById('add-food-btn').style.display  = 'none';
+            document.getElementById('meal-picker').style.display  = 'block';
+            document.getElementById('add-food-btn').style.display = 'none';
         }
 
         function hideMealPicker() {
-            document.getElementById('meal-picker').style.display  = 'none';
+            document.getElementById('meal-picker').style.display = 'none';
             if (selectedDate) document.getElementById('add-food-btn').style.display = 'block';
         }
 

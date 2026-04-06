@@ -17,14 +17,15 @@
         }
 
         .phone-frame {
-            width: 375px;
+            width: 400px;
             background: white;
             border-radius: 40px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
-            height: 667px;
+            height: 750px;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         .header {
@@ -114,8 +115,68 @@
             font-size: 16px;
         }
 
-        .empty-state  { text-align: center; padding: 60px 20px; color: #95a5a6; }
-        .empty-icon   { font-size: 48px; margin-bottom: 10px; }
+        .empty-state { text-align: center; padding: 60px 20px; color: #95a5a6; }
+        .empty-icon  { font-size: 48px; margin-bottom: 10px; }
+
+        .modal {
+            display: none;
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 10;
+            justify-content: center;
+            align-items: center;
+            border-radius: 40px;
+        }
+
+        .modal-box {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            width: 80%;
+            text-align: center;
+        }
+
+        .modal-icon  { font-size: 36px; margin-bottom: 12px; }
+
+        .modal-box h3 {
+            font-size: 17px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 6px;
+        }
+
+        .modal-box p {
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        .modal-confirm {
+            width: 100%;
+            padding: 12px;
+            background: #e74c3c;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+
+        .modal-cancel {
+            width: 100%;
+            padding: 12px;
+            background: none;
+            border: 2px solid #ecf0f1;
+            border-radius: 10px;
+            color: #7f8c8d;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
 
         .bottom-nav {
             display: flex;
@@ -145,6 +206,17 @@
 </head>
 <body>
     <div class="phone-frame">
+
+        <div class="modal" id="delete-modal">
+            <div class="modal-box">
+                <div class="modal-icon">🗑️</div>
+                <h3>Remove Food</h3>
+                <p id="modal-food-name">Are you sure you want to remove this item?</p>
+                <button class="modal-confirm" onclick="confirmDelete()">Remove</button>
+                <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+
         <div class="header">
             <div class="header-top">
                 <button class="back-button" onclick="goBack()">&#8249;</button>
@@ -178,6 +250,8 @@
     <script>
         const mealType = window.location.pathname.split('/')[2];
         document.getElementById('meal-title').textContent = mealType;
+
+        let pendingDeleteId = null;
 
         function navigate(path) { window.location.href = path; }
         function goBack()       { window.location.href = '/'; }
@@ -215,7 +289,7 @@
                     </div>
                     <div class="food-right">
                         <div class="food-calories">${Math.round(food.calories * food.servings)}</div>
-                        <button class="delete-button" onclick="deleteFood(${food.log_id})">&times;</button>
+                        <button class="delete-button" onclick="openDeleteModal(${food.log_id}, '${food.name}')">&times;</button>
                     </div>
                 </div>
             `).join('');
@@ -235,12 +309,28 @@
             document.getElementById('total-fat').textContent      = Math.round(fat);
         }
 
-        function deleteFood(logId) {
-            if (confirm('Remove this food?')) {
-                fetch(`/api/delete-food/${logId}`, { method: 'DELETE' })
-                    .then(r => r.json())
-                    .then(data => { if (data.success) location.reload(); });
-            }
+        function openDeleteModal(logId, foodName) {
+            pendingDeleteId = logId;
+            document.getElementById('modal-food-name').textContent =
+                `Remove "${foodName}" from ${mealType}?`;
+            document.getElementById('delete-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('delete-modal').style.display = 'none';
+            pendingDeleteId = null;
+        }
+
+        function confirmDelete() {
+            if (!pendingDeleteId) return;
+            fetch(`/api/delete-food/${pendingDeleteId}`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        closeModal();
+                        location.reload();
+                    }
+                });
         }
     </script>
 </body>
