@@ -407,7 +407,7 @@ def get_food_log_by_date(date_str):
     user_id = session['user_id']
     cursor.execute('''
         SELECT f.name, f.calories, f.protein, f.carbs, f.fat,
-               fl.meal_type, fl.servings,
+               fl.meal_type, fl.servings, fl.id as log_id,
                ROUND(f.calories * fl.servings)      as total_calories,
                ROUND(f.protein  * fl.servings, 1)   as total_protein,
                ROUND(f.carbs    * fl.servings, 1)   as total_carbs,
@@ -440,10 +440,41 @@ def get_user():
     conn = get_db()
     cursor = conn.cursor()
     user_id = session['user_id']
-    cursor.execute('SELECT username, email, is_student FROM users WHERE id = ?', (user_id,))
+    cursor.execute('''
+        SELECT username, email, is_student,
+               daily_calorie_goal, daily_protein_goal,
+               daily_carbs_goal, daily_fat_goal
+        FROM users WHERE id = ?
+    ''', (user_id,))
     user = cursor.fetchone()
     conn.close()
     return jsonify(dict(user))
+
+
+# saves updated calorie and macro goals for the logged in user
+@app.route('/api/update-goals', methods=['POST'])
+@login_required
+def update_goals():
+    data = request.json
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        UPDATE users SET
+            daily_calorie_goal = ?,
+            daily_protein_goal = ?,
+            daily_carbs_goal   = ?,
+            daily_fat_goal     = ?
+        WHERE id = ?
+    ''', (
+        int(data.get('calories', 2000)),
+        int(data.get('protein',  150)),
+        int(data.get('carbs',    200)),
+        int(data.get('fat',      65)),
+        session['user_id']
+    ))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
 
 
 if __name__ == '__main__':
