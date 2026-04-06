@@ -34,11 +34,7 @@
             flex-shrink: 0;
         }
 
-        .header-top {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        .header-top { display: flex; align-items: center; gap: 12px; }
 
         .bot-avatar {
             width: 48px;
@@ -61,7 +57,6 @@
             padding: 15px;
         }
 
-        /* today snapshot card */
         .snapshot-card {
             background: white;
             border-radius: 20px;
@@ -70,28 +65,12 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
 
-        .snapshot-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: #95a5a6;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 12px;
-        }
+        .snapshot-title    { font-size: 13px; font-weight: 700; color: #95a5a6; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+        .snapshot-subtitle { font-size: 11px; color: #bdc3c7; margin-bottom: 12px; }
 
-        .macro-row {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-        }
+        .macro-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 
-        .macro-pill {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 10px 6px;
-            text-align: center;
-        }
-
+        .macro-pill { background: #f8f9fa; border-radius: 12px; padding: 10px 6px; text-align: center; }
         .macro-pill .val { font-size: 16px; font-weight: 700; }
         .macro-pill .lbl { font-size: 10px; color: #95a5a6; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 2px; }
 
@@ -100,68 +79,42 @@
         .macro-pill.carb .val { color: #9b59b6; }
         .macro-pill.fat  .val { color: #f39c12; }
 
-        /* alert cards */
+        /* alert cards are now clickable */
         .alert-card {
             border-radius: 20px;
             padding: 18px;
             margin-bottom: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
         }
 
-        .alert-card.warning {
-            background: #fff8f0;
-            border-left: 4px solid #f39c12;
-        }
+        .alert-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
 
-        .alert-card.danger {
-            background: #fff5f5;
-            border-left: 4px solid #e74c3c;
-        }
+        .alert-card.warning { background: #fff8f0; border-left: 4px solid #f39c12; }
+        .alert-card.danger  { background: #fff5f5; border-left: 4px solid #e74c3c; }
+        .alert-card.good    { background: #f0f9f4; border-left: 4px solid #48c774; cursor: default; }
+        .alert-card.good:hover { transform: none; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 
-        .alert-card.good {
-            background: #f0f9f4;
-            border-left: 4px solid #48c774;
-        }
+        .alert-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .alert-icon   { font-size: 22px; }
+        .alert-title  { font-size: 15px; font-weight: 700; color: #2c3e50; flex: 1; }
+        .alert-body   { font-size: 13px; color: #5d6d7e; line-height: 1.6; margin-bottom: 10px; }
+        .alert-stat   { font-weight: 700; color: #2c3e50; }
 
-        .alert-card.info {
-            background: #f0f7ff;
-            border-left: 4px solid #3498db;
-        }
-
-        .alert-header {
+        /* tap to learn more hint shown on warning/danger cards */
+        .learn-more {
+            font-size: 12px;
+            font-weight: 600;
+            color: #e67e22;
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
+            gap: 4px;
         }
 
-        .alert-icon { font-size: 22px; }
+        .alert-card.danger .learn-more { color: #e74c3c; }
 
-        .alert-title {
-            font-size: 15px;
-            font-weight: 700;
-            color: #2c3e50;
-        }
-
-        .alert-body {
-            font-size: 13px;
-            color: #5d6d7e;
-            line-height: 1.6;
-        }
-
-        .alert-stat {
-            display: inline-block;
-            font-weight: 700;
-            color: #2c3e50;
-        }
-
-        /* 3 day trend */
-        .trend-row {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: 10px;
-        }
+        .trend-row { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
 
         .trend-day {
             display: flex;
@@ -176,15 +129,7 @@
         .trend-day .date-label { color: #7f8c8d; font-weight: 500; }
         .trend-day .trend-val  { color: #2c3e50; font-weight: 700; }
 
-        /* empty / loading state */
-        .state-card {
-            background: white;
-            border-radius: 20px;
-            padding: 40px 20px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-
+        .state-card { background: white; border-radius: 20px; padding: 40px 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .state-card .icon { font-size: 40px; margin-bottom: 12px; }
         .state-card p     { font-size: 14px; color: #7f8c8d; line-height: 1.6; }
 
@@ -246,14 +191,11 @@
     <script>
         function navigate(path) { window.location.href = path; }
 
-        // thresholds — based on general nutritional health guidelines
         const LIMITS = {
-            protein_day:    200,   // grams — above this risks kidney and liver strain
-            protein_3day:   450,   // grams total over 3 days
-            fat_day:        100,   // grams — above this raises cardiovascular risk
-            fat_3day:       270,   // grams total over 3 days
-            carbs_day:      400,   // grams — above this can spike blood sugar
-            calories_day:   3000   // kcal — significant surplus above 2000 goal
+            protein_week:  1400,
+            fat_week:       700,
+            carbs_week:    2800,
+            calories_week: 21000
         };
 
         async function loadData() {
@@ -273,7 +215,6 @@
         function render(days) {
             const content = document.getElementById('content');
 
-            // no food logged at all
             if (!days.length) {
                 content.innerHTML = `
                     <div class="state-card">
@@ -283,149 +224,129 @@
                 return;
             }
 
-            const today  = days[0];
-            const recent = days.slice(0, 3); // last 3 days including today
-
-            // 3 day totals
-            const sum3 = recent.reduce((acc, d) => {
-                acc.protein += d.total_protein;
-                acc.fat     += d.total_fat;
-                acc.carbs   += d.total_carbs;
+            const week = days.reduce((acc, d) => {
+                acc.calories += d.total_calories;
+                acc.protein  += d.total_protein;
+                acc.carbs    += d.total_carbs;
+                acc.fat      += d.total_fat;
                 return acc;
-            }, { protein: 0, fat: 0, carbs: 0 });
+            }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
 
-            // build alert cards
+            week.calories = Math.round(week.calories);
+            week.protein  = Math.round(week.protein);
+            week.carbs    = Math.round(week.carbs);
+            week.fat      = Math.round(week.fat);
+
+            const daysLogged = days.length;
             const alerts = [];
 
-            // protein checks
-            if (today.total_protein > LIMITS.protein_day) {
+            if (week.protein > LIMITS.protein_week) {
                 alerts.push({
-                    type:  'danger',
-                    icon:  '🧬',
-                    title: 'Very High Protein Today',
-                    body:  `You have consumed <span class="alert-stat">${today.total_protein}g</span> of protein today. 
-                            Consistently eating above 200g per day can put significant strain on your kidneys and liver, 
-                            and may cause dehydration. Consider spreading your intake more evenly across the week.`
+                    type: 'danger', icon: '🧬', infoType: 'protein',
+                    title: 'Very High Protein This Week',
+                    body: `Your total protein this week is <span class="alert-stat">${week.protein}g</span> across ${daysLogged} logged days, 
+                           averaging <span class="alert-stat">${Math.round(week.protein / daysLogged)}g per day</span>. 
+                           Consistently eating above 200g per day can put strain on your kidneys and liver.`
                 });
-            } else if (sum3.protein > LIMITS.protein_3day) {
+            } else if (week.protein > LIMITS.protein_week * 0.75) {
                 alerts.push({
-                    type:  'warning',
-                    icon:  '🧬',
-                    title: 'High Protein Over Last 3 Days',
-                    body:  `Your total protein over the last 3 days is <span class="alert-stat">${Math.round(sum3.protein)}g</span>. 
-                            That averages out to ${Math.round(sum3.protein / recent.length)}g per day. 
-                            Long term high protein intake can affect kidney function. Aim for 100–160g per day for most adults.`
+                    type: 'warning', icon: '🧬', infoType: 'protein',
+                    title: 'Elevated Protein This Week',
+                    body: `Your weekly protein total is <span class="alert-stat">${week.protein}g</span>, averaging 
+                           <span class="alert-stat">${Math.round(week.protein / daysLogged)}g per day</span>. 
+                           This is approaching high levels. For most adults 100–160g per day is a healthy range.`
                 });
             }
 
-            // fat checks
-            if (today.total_fat > LIMITS.fat_day) {
+            if (week.fat > LIMITS.fat_week) {
                 alerts.push({
-                    type:  'danger',
-                    icon:  '🫀',
-                    title: 'High Fat Intake Today',
-                    body:  `You have consumed <span class="alert-stat">${today.total_fat}g</span> of fat today. 
-                            A consistently high fat diet, particularly saturated fat, is linked to raised cholesterol 
-                            and an increased risk of cardiovascular disease. Try to keep daily fat intake under 100g.`
+                    type: 'danger', icon: '🫀', infoType: 'fat',
+                    title: 'High Fat Intake This Week',
+                    body: `Your total fat this week is <span class="alert-stat">${week.fat}g</span>, averaging 
+                           <span class="alert-stat">${Math.round(week.fat / daysLogged)}g per day</span>. 
+                           A consistently high fat diet is linked to raised cholesterol and cardiovascular disease.`
                 });
-            } else if (sum3.fat > LIMITS.fat_3day) {
+            } else if (week.fat > LIMITS.fat_week * 0.75) {
                 alerts.push({
-                    type:  'warning',
-                    icon:  '🫀',
-                    title: 'Elevated Fat Over Last 3 Days',
-                    body:  `Your combined fat intake over the last 3 days is <span class="alert-stat">${Math.round(sum3.fat)}g</span>. 
-                            This averages ${Math.round(sum3.fat / recent.length)}g per day which is above the recommended range. 
-                            Consider swapping some high fat foods for lean proteins or vegetables.`
+                    type: 'warning', icon: '🫀', infoType: 'fat',
+                    title: 'Elevated Fat This Week',
+                    body: `Your weekly fat total is <span class="alert-stat">${week.fat}g</span>. 
+                           This is above the ideal range. Consider swapping some high fat foods for leaner options.`
                 });
             }
 
-            // carbs check
-            if (today.total_carbs > LIMITS.carbs_day) {
+            if (week.carbs > LIMITS.carbs_week) {
                 alerts.push({
-                    type:  'warning',
-                    icon:  '🩸',
-                    title: 'High Carbohydrate Intake Today',
-                    body:  `You have consumed <span class="alert-stat">${today.total_carbs}g</span> of carbohydrates today. 
-                            Very high carbohydrate intake, especially from refined sources, can cause blood sugar spikes 
-                            and may contribute to insulin resistance over time. Try to stick below 400g per day.`
+                    type: 'warning', icon: '🩸', infoType: 'carbs',
+                    title: 'High Carbohydrate Intake This Week',
+                    body: `Your total carbs this week is <span class="alert-stat">${week.carbs}g</span>, averaging 
+                           <span class="alert-stat">${Math.round(week.carbs / daysLogged)}g per day</span>. 
+                           Very high carb intake can cause blood sugar spikes and may contribute to insulin resistance.`
                 });
             }
 
-            // calorie check
-            if (today.total_calories > LIMITS.calories_day) {
+            if (week.calories > LIMITS.calories_week) {
                 alerts.push({
-                    type:  'warning',
-                    icon:  '⚡',
-                    title: 'Significant Calorie Surplus',
-                    body:  `You have consumed <span class="alert-stat">${today.total_calories} kcal</span> today, 
-                            which is ${today.total_calories - 2000} kcal above your 2000 kcal daily goal. 
-                            The occasional surplus is fine, but a consistent large surplus will lead to weight gain over time.`
+                    type: 'warning', icon: '⚡', infoType: 'calories',
+                    title: 'Significant Calorie Surplus This Week',
+                    body: `Your total calories this week are <span class="alert-stat">${week.calories} kcal</span>, averaging 
+                           <span class="alert-stat">${Math.round(week.calories / daysLogged)} kcal per day</span>. 
+                           A consistent large surplus will lead to weight gain over time.`
                 });
             }
 
-            // all looks good
             if (!alerts.length) {
                 alerts.push({
-                    type:  'good',
-                    icon:  '✅',
-                    title: 'Everything Looks Balanced',
-                    body:  `Your nutrition today looks healthy and well within safe limits. 
-                            Keep up the great work and keep logging your meals so NutriBot can keep an eye on things for you.`
+                    type: 'good', icon: '✅', infoType: null,
+                    title: 'Great Week So Far',
+                    body: `Your nutrition this week looks healthy and well within safe limits. Keep logging your meals so NutriBot can keep an eye on things for you.`
                 });
             }
 
-            // build html
             let html = '';
 
-            // today snapshot
             html += `
                 <div class="snapshot-card">
-                    <div class="snapshot-title">Today's Summary</div>
+                    <div class="snapshot-title">This Week's Summary</div>
+                    <div class="snapshot-subtitle">${daysLogged} day${daysLogged !== 1 ? 's' : ''} logged this week</div>
                     <div class="macro-row">
-                        <div class="macro-pill cal">
-                            <div class="val">${today.total_calories}</div>
-                            <div class="lbl">kcal</div>
-                        </div>
-                        <div class="macro-pill pro">
-                            <div class="val">${today.total_protein}g</div>
-                            <div class="lbl">Protein</div>
-                        </div>
-                        <div class="macro-pill carb">
-                            <div class="val">${today.total_carbs}g</div>
-                            <div class="lbl">Carbs</div>
-                        </div>
-                        <div class="macro-pill fat">
-                            <div class="val">${today.total_fat}g</div>
-                            <div class="lbl">Fat</div>
-                        </div>
+                        <div class="macro-pill cal"><div class="val">${week.calories}</div><div class="lbl">kcal</div></div>
+                        <div class="macro-pill pro"><div class="val">${week.protein}g</div><div class="lbl">Protein</div></div>
+                        <div class="macro-pill carb"><div class="val">${week.carbs}g</div><div class="lbl">Carbs</div></div>
+                        <div class="macro-pill fat"><div class="val">${week.fat}g</div><div class="lbl">Fat</div></div>
                     </div>
                 </div>`;
 
-            // alert cards
             alerts.forEach(a => {
+                // only warning and danger cards are clickable and show the learn more hint
+                const clickable = a.infoType ? `onclick="navigate('/nutribot-info?type=${a.infoType}')"` : '';
+                const learnMore = a.infoType
+                    ? `<div class="learn-more"><i class="fas fa-circle-info"></i> Tap to learn more</div>`
+                    : '';
+
                 html += `
-                    <div class="alert-card ${a.type}">
+                    <div class="alert-card ${a.type}" ${clickable}>
                         <div class="alert-header">
                             <span class="alert-icon">${a.icon}</span>
                             <span class="alert-title">${a.title}</span>
                         </div>
                         <div class="alert-body">${a.body}</div>
+                        ${learnMore}
                     </div>`;
             });
 
-            // 3 day trend if more than 1 day logged
-            if (recent.length > 1) {
-                const dayNames = ['Today', 'Yesterday', '2 days ago'];
+            if (days.length > 1) {
+                const dayNames = ['Today','Yesterday','2 days ago','3 days ago','4 days ago','5 days ago','6 days ago'];
                 html += `
                     <div class="snapshot-card">
-                        <div class="snapshot-title">Last ${recent.length} Days — Calories</div>
+                        <div class="snapshot-title">Daily Breakdown</div>
+                        <div class="snapshot-subtitle">Calories per logged day</div>
                         <div class="trend-row">
-                            ${recent.map((d, i) => `
+                            ${days.map((d, i) => `
                                 <div class="trend-day">
                                     <span class="date-label">${dayNames[i] || d.date}</span>
                                     <span class="trend-val">${d.total_calories} kcal</span>
-                                </div>
-                            `).join('')}
+                                </div>`).join('')}
                         </div>
                     </div>`;
             }

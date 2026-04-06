@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FitBro - NutriBot Info</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .phone-frame {
+            width: 400px;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            height: 750px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #48c774, #3ab566);
+            padding: 20px 25px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+
+        .back-button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .header-icon { font-size: 28px; }
+
+        .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
+        .header p  { font-size: 13px; opacity: 0.9; }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            background: #f5f5f5;
+            padding: 15px;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 20px;
+            padding: 18px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #95a5a6;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 14px;
+        }
+
+        /* each danger/tip row */
+        .info-row {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .info-row:last-child { margin-bottom: 0; }
+
+        .info-row-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .info-row-icon.danger { background: #fff5f5; }
+        .info-row-icon.tip    { background: #f0f9f4; }
+
+        .info-row-text h4 { font-size: 14px; font-weight: 700; color: #2c3e50; margin-bottom: 4px; }
+        .info-row-text p  { font-size: 13px; color: #5d6d7e; line-height: 1.6; }
+
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            background: linear-gradient(135deg, #2d6a4f, #1b4332);
+            flex-shrink: 0;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.4);
+            font-size: 10px;
+            cursor: pointer;
+            padding: 4px 10px;
+            transition: color 0.2s;
+        }
+
+        .nav-item i { font-size: 18px; }
+        .nav-item.active { color: white; }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+
+        <div class="header">
+            <div class="header-top">
+                <button class="back-button" onclick="goBack()">&#8249;</button>
+                <span class="header-icon" id="header-icon"></span>
+                <div>
+                    <h1 id="header-title"></h1>
+                    <p id="header-subtitle"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content" id="content"></div>
+
+        <div class="bottom-nav">
+            <button class="nav-item" onclick="navigate('/')"><i class="fas fa-house"></i><span>Home</span></button>
+            <button class="nav-item" onclick="navigate('/add-food')"><i class="fas fa-plus"></i><span>Add</span></button>
+            <button class="nav-item" onclick="navigate('/stats')"><i class="fas fa-calendar-days"></i><span>Diary</span></button>
+            <button class="nav-item active" onclick="navigate('/community')"><i class="fas fa-robot"></i><span>NutriBot</span></button>
+            <button class="nav-item" onclick="navigate('/profile')"><i class="fas fa-user"></i><span>Profile</span></button>
+        </div>
+    </div>
+
+    <script>
+        function navigate(path) { window.location.href = path; }
+        function goBack()       { window.location.href = '/community'; }
+
+        // all the content for each warning type
+        const INFO = {
+            protein: {
+                icon:     '🧬',
+                title:    'High Protein Risks',
+                subtitle: 'What too much protein can do to your body',
+                dangers: [
+                    {
+                        icon:  '🫘',
+                        title: 'Kidney Strain',
+                        text:  'Your kidneys filter the waste products created when protein is broken down. Eating large amounts regularly forces your kidneys to work much harder than normal, which over time can reduce their ability to function properly.'
+                    },
+                    {
+                        icon:  '🫁',
+                        title: 'Liver Stress',
+                        text:  'Excess protein is processed by the liver before the waste can be expelled. A consistently high intake puts the liver under added stress and can impair its normal functions over time.'
+                    },
+                    {
+                        icon:  '💧',
+                        title: 'Dehydration',
+                        text:  'Breaking down protein produces ammonia, which the body converts to urea and flushes out through urine. This process requires more water, meaning high protein diets can leave you dehydrated if you are not drinking enough.'
+                    },
+                    {
+                        icon:  '🦴',
+                        title: 'Bone Health',
+                        text:  'Some research suggests that very high protein intake can increase the amount of calcium lost through urine, which over time may reduce bone density and increase the risk of fractures.'
+                    },
+                    {
+                        icon:  '🦶',
+                        title: 'Gout Risk',
+                        text:  'High protein intake, especially from animal sources, can raise uric acid levels in the blood. If uric acid builds up it forms crystals in the joints, causing the painful condition known as gout.'
+                    }
+                ],
+                tips: [
+                    { icon: '✅', title: 'Aim for 100–160g per day', text: 'This range covers the needs of most active adults without putting excess strain on your organs.' },
+                    { icon: '✅', title: 'Spread it across meals',   text: 'Rather than consuming most of your protein in one meal, spread it evenly across breakfast, lunch and dinner for better absorption.' },
+                    { icon: '✅', title: 'Drink more water',         text: 'If your protein intake is high, make sure you are drinking at least 2 litres of water per day to help your kidneys flush out the extra waste.' }
+                ]
+            },
+
+            fat: {
+                icon:     '🫀',
+                title:    'High Fat Risks',
+                subtitle: 'What too much fat can do to your body',
+                dangers: [
+                    {
+                        icon:  '❤️',
+                        title: 'Cardiovascular Disease',
+                        text:  'A diet consistently high in fat, particularly saturated fat, raises LDL (bad) cholesterol levels in the blood. High LDL is one of the leading risk factors for heart attacks and strokes.'
+                    },
+                    {
+                        icon:  '🩸',
+                        title: 'Clogged Arteries',
+                        text:  'Excess fat and cholesterol can build up inside artery walls, forming plaques that narrow the arteries and restrict blood flow. This is known as atherosclerosis and can eventually block blood supply to the heart or brain.'
+                    },
+                    {
+                        icon:  '📈',
+                        title: 'High Blood Pressure',
+                        text:  'Narrowed arteries caused by fatty deposits force the heart to pump harder to push blood through, raising blood pressure. Sustained high blood pressure is a major risk factor for heart disease, kidney disease and strokes.'
+                    },
+                    {
+                        icon:  '⚖️',
+                        title: 'Weight Gain',
+                        text:  'Fat is the most calorie-dense macronutrient at 9 kcal per gram, compared to 4 kcal per gram for protein and carbohydrates. This makes it easy to consume far more calories than you realise from high fat foods.'
+                    },
+                    {
+                        icon:  '🍬',
+                        title: 'Type 2 Diabetes Risk',
+                        text:  'High fat diets, particularly those rich in saturated fat, have been linked to reduced insulin sensitivity. Over time this can lead to insulin resistance, which is a key step towards developing type 2 diabetes.'
+                    }
+                ],
+                tips: [
+                    { icon: '✅', title: 'Keep daily fat under 100g',    text: 'This keeps you within a range that supports energy needs without raising cardiovascular risk.' },
+                    { icon: '✅', title: 'Choose healthier fats',         text: 'Unsaturated fats found in olive oil, avocados, nuts and oily fish are much better for heart health than saturated fats found in butter, fatty meat and processed foods.' },
+                    { icon: '✅', title: 'Check labels on packaged food', text: 'A lot of hidden fat comes from processed and ready-made foods. Always check the nutritional label and look at the saturated fat content specifically.' }
+                ]
+            },
+
+            carbs: {
+                icon:     '🩸',
+                title:    'High Carb Risks',
+                subtitle: 'What too many carbohydrates can do to your body',
+                dangers: [
+                    {
+                        icon:  '📈',
+                        title: 'Blood Sugar Spikes',
+                        text:  'When you consume large amounts of carbohydrates, especially refined ones like white bread and sugary drinks, your blood sugar rises rapidly. These spikes put stress on the body and can leave you feeling tired and craving more food shortly after.'
+                    },
+                    {
+                        icon:  '🔄',
+                        title: 'Insulin Resistance',
+                        text:  'Repeated blood sugar spikes force the pancreas to produce large amounts of insulin to bring levels back down. Over time the body becomes less responsive to insulin, a condition called insulin resistance which is the precursor to type 2 diabetes.'
+                    },
+                    {
+                        icon:  '🍬',
+                        title: 'Type 2 Diabetes',
+                        text:  'Long term insulin resistance means blood sugar stays elevated for longer after meals. This sustained high blood sugar damages blood vessels and nerves throughout the body and is the defining feature of type 2 diabetes.'
+                    },
+                    {
+                        icon:  '⚖️',
+                        title: 'Weight Gain',
+                        text:  'Carbohydrates that are not immediately used for energy are converted to glycogen and stored in the liver and muscles. Once those stores are full, excess carbohydrates are converted to fat and stored in the body.'
+                    },
+                    {
+                        icon:  '😴',
+                        title: 'Energy Crashes',
+                        text:  'The rapid rise in blood sugar caused by high carb meals is followed by an equally sharp drop as insulin does its job. This crash leaves you feeling fatigued, unfocused and hungry again, often leading to a cycle of overeating.'
+                    }
+                ],
+                tips: [
+                    { icon: '✅', title: 'Stay below 400g per day',      text: 'This keeps carbohydrate intake within a range that supports energy without causing repeated blood sugar spikes.' },
+                    { icon: '✅', title: 'Choose complex carbohydrates',  text: 'Oats, brown rice, sweet potatoes and vegetables release energy slowly and cause much gentler rises in blood sugar than refined alternatives.' },
+                    { icon: '✅', title: 'Pair carbs with protein or fat', text: 'Eating carbohydrates alongside protein or healthy fats slows down digestion and reduces how quickly blood sugar rises after a meal.' }
+                ]
+            },
+
+            calories: {
+                icon:     '⚡',
+                title:    'High Calorie Risks',
+                subtitle: 'What a consistent calorie surplus can do to your body',
+                dangers: [
+                    {
+                        icon:  '⚖️',
+                        title: 'Weight Gain',
+                        text:  'When you consistently consume more calories than your body uses, the excess is stored as fat. Even a surplus of just 500 kcal per day will result in roughly 0.5kg of weight gain per week over time.'
+                    },
+                    {
+                        icon:  '🫀',
+                        title: 'Cardiovascular Strain',
+                        text:  'Carrying excess body weight forces the heart to work harder to pump blood around a larger body. Over time this raises blood pressure and increases the risk of heart disease, heart attack and stroke.'
+                    },
+                    {
+                        icon:  '🦵',
+                        title: 'Joint Problems',
+                        text:  'Extra body weight places additional stress on weight-bearing joints, particularly the knees and hips. This significantly increases the risk of developing osteoarthritis and can make existing joint pain much worse.'
+                    },
+                    {
+                        icon:  '🍬',
+                        title: 'Metabolic Syndrome',
+                        text:  'Consistent overeating can lead to a cluster of conditions known as metabolic syndrome, including high blood pressure, high blood sugar, excess abdominal fat and abnormal cholesterol levels, all of which increase the risk of serious disease.'
+                    },
+                    {
+                        icon:  '😴',
+                        title: 'Sleep Disruption',
+                        text:  'Excess weight, particularly around the neck and abdomen, is strongly associated with sleep apnea, a condition where breathing repeatedly stops during sleep. Poor sleep then further disrupts hunger hormones, creating a cycle that makes managing weight even harder.'
+                    }
+                ],
+                tips: [
+                    { icon: '✅', title: 'Stick to your 2000 kcal goal',     text: 'Occasional surpluses are completely fine but try to keep your weekly average close to your daily target.' },
+                    { icon: '✅', title: 'Focus on volume and satiety',       text: 'High protein and high fibre foods keep you feeling full for longer, making it easier to stay within your calorie goal without feeling hungry.' },
+                    { icon: '✅', title: 'Log every meal consistently',       text: 'Studies show that people who track consistently are far more successful at managing their weight. Even logging imperfectly is better than not logging at all.' }
+                ]
+            }
+        };
+
+        // reads the type from the URL and loads the right content
+        const type = new URLSearchParams(window.location.search).get('type');
+        const info = INFO[type];
+
+        if (!info) {
+            window.location.href = '/community';
+        } else {
+            document.getElementById('header-icon').textContent    = info.icon;
+            document.getElementById('header-title').textContent   = info.title;
+            document.getElementById('header-subtitle').textContent = info.subtitle;
+
+            let html = '';
+
+            // dangers section
+            html += `<div class="info-card"><div class="card-title">Health Risks</div>`;
+            info.dangers.forEach(d => {
+                html += `
+                    <div class="info-row">
+                        <div class="info-row-icon danger">${d.icon}</div>
+                        <div class="info-row-text">
+                            <h4>${d.title}</h4>
+                            <p>${d.text}</p>
+                        </div>
+                    </div>`;
+            });
+            html += `</div>`;
+
+            // tips section
+            html += `<div class="info-card"><div class="card-title">What You Can Do</div>`;
+            info.tips.forEach(t => {
+                html += `
+                    <div class="info-row">
+                        <div class="info-row-icon tip">${t.icon}</div>
+                        <div class="info-row-text">
+                            <h4>${t.title}</h4>
+                            <p>${t.text}</p>
+                        </div>
+                    </div>`;
+            });
+            html += `</div>`;
+
+            document.getElementById('content').innerHTML = html;
+        }
+    </script>
+</body>
+</html>

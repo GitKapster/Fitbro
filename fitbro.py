@@ -109,8 +109,14 @@ def stats():
 
 
 @app.route('/community')
+@login_required
 def community():
     return render_template('nutribot.html')
+
+@app.route('/nutribot-info')
+@login_required
+def nutribot_info():
+    return render_template('nutribot_detail.html')
 
 
 @app.route('/profile')
