@@ -25,7 +25,7 @@
             border-radius: 40px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
-            min-height: 667px;
+            height: 667px;           /* fixed — was min-height, now matches all other pages */
             display: flex;
             flex-direction: column;
         }
@@ -35,6 +35,7 @@
             padding: 40px 30px 25px 30px;
             color: white;
             text-align: center;
+            flex-shrink: 0;          /* stops header shrinking */
         }
         
         .logo {
@@ -54,9 +55,9 @@
         }
         
         .content {
-            flex: 1;
+            flex: 1;                 /* fills the space between header and bottom of frame */
+            overflow-y: auto;        /* scroll if form is taller than available space */
             padding: 30px;
-            overflow-y: auto;
         }
         
         .form-group {
@@ -132,9 +133,7 @@
             transition: transform 0.2s;
         }
         
-        .register-button:hover {
-            transform: translateY(-2px);
-        }
+        .register-button:hover { transform: translateY(-2px); }
         
         .register-button:disabled {
             opacity: 0.6;
@@ -179,44 +178,24 @@
             <form id="register-form">
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input 
-                        type="text" 
-                        id="username" 
-                        name="username" 
-                        placeholder="Choose a username"
-                        required
-                    >
+                    <input type="text" id="username" name="username"
+                           placeholder="Choose a username" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input 
-                        type="email" 
-                        id="email" 
-                        name="email" 
-                        placeholder="your@email.com"
-                        required
-                    >
+                    <input type="email" id="email" name="email"
+                           placeholder="your@email.com" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        placeholder="Create a password"
-                        minlength="6"
-                        required
-                    >
+                    <input type="password" id="password" name="password"
+                           placeholder="Create a password" minlength="6" required>
                 </div>
                 
                 <div class="checkbox-group">
-                    <input 
-                        type="checkbox" 
-                        id="is_student" 
-                        name="is_student"
-                    >
+                    <input type="checkbox" id="is_student" name="is_student">
                     <label for="is_student">
                         I'm a student <span class="student-badge">FREE</span>
                     </label>
@@ -234,55 +213,48 @@
     </div>
 
     <script>
-        const form = document.getElementById('register-form');
-        const errorDiv = document.getElementById('error-message');
+        const form        = document.getElementById('register-form');
+        const errorDiv    = document.getElementById('error-message');
         const registerBtn = document.getElementById('register-btn');
         
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const username = document.getElementById('username').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+            const username   = document.getElementById('username').value;
+            const email      = document.getElementById('email').value;
+            const password   = document.getElementById('password').value;
             const is_student = document.getElementById('is_student').checked;
             
-            // Basic validation
             if (password.length < 6) {
-                errorDiv.textContent = 'Password must be at least 6 characters';
+                errorDiv.textContent   = 'Password must be at least 6 characters';
                 errorDiv.style.display = 'block';
                 return;
             }
             
-            // Disable button and show loading
-            registerBtn.disabled = true;
-            registerBtn.textContent = 'Creating account...';
-            errorDiv.style.display = 'none';
+            registerBtn.disabled      = true;
+            registerBtn.textContent   = 'Creating account...';
+            errorDiv.style.display    = 'none';
             
             try {
-                const response = await fetch('/register', {
+                const res  = await fetch('/register', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, email, password, is_student })
                 });
-                
-                const data = await response.json();
+                const data = await res.json();
                 
                 if (data.success) {
-                    // Redirect to dashboard
                     window.location.href = '/';
                 } else {
-                    // Show error
-                    errorDiv.textContent = data.error || 'Registration failed';
+                    errorDiv.textContent   = data.error || 'Registration failed';
                     errorDiv.style.display = 'block';
-                    registerBtn.disabled = false;
+                    registerBtn.disabled   = false;
                     registerBtn.textContent = 'Create Account';
                 }
-            } catch (error) {
-                errorDiv.textContent = 'Connection error. Please try again.';
+            } catch {
+                errorDiv.textContent   = 'Connection error. Please try again.';
                 errorDiv.style.display = 'block';
-                registerBtn.disabled = false;
+                registerBtn.disabled   = false;
                 registerBtn.textContent = 'Create Account';
             }
         });

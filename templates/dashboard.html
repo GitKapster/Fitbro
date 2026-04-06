@@ -25,13 +25,16 @@
             border-radius: 40px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
-            position: relative;
+            height: 667px;           /* fixed — matches all other pages */
+            display: flex;           /* added — needed for header/content/nav layout */
+            flex-direction: column;  /* added */
         }
         
         .header {
             background: linear-gradient(135deg, #48c774, #3ab566);
             padding: 30px 25px;
             color: white;
+            flex-shrink: 0;          /* added — stops header shrinking */
         }
         
         .date-section h1 {
@@ -46,6 +49,8 @@
         }
         
         .content {
+            flex: 1;                 /* added — fills space between header and nav */
+            overflow-y: auto;        /* added — scroll if content is taller than frame */
             padding: 25px;
             background: white;
         }
@@ -115,17 +120,9 @@
             text-align: center;
         }
         
-        .macro-card.protein {
-            background: #e3f2fd;
-        }
-        
-        .macro-card.carbs {
-            background: #fff3e0;
-        }
-        
-        .macro-card.fats {
-            background: #f3e5f5;
-        }
+        .macro-card.protein { background: #e3f2fd; }
+        .macro-card.carbs   { background: #fff3e0; }
+        .macro-card.fats    { background: #f3e5f5; }
         
         .macro-label {
             font-size: 12px;
@@ -138,17 +135,9 @@
             font-weight: 700;
         }
         
-        .macro-card.protein .macro-value {
-            color: #1976d2;
-        }
-        
-        .macro-card.carbs .macro-value {
-            color: #f57c00;
-        }
-        
-        .macro-card.fats .macro-value {
-            color: #7b1fa2;
-        }
+        .macro-card.protein .macro-value { color: #1976d2; }
+        .macro-card.carbs   .macro-value { color: #f57c00; }
+        .macro-card.fats    .macro-value { color: #7b1fa2; }
         
         .meals-section {
             margin-bottom: 20px;
@@ -195,6 +184,7 @@
             justify-content: space-around;
             padding: 15px 0;
             background: linear-gradient(135deg, #2d6a4f, #1b4332);
+            flex-shrink: 0;          /* added — stops nav shrinking */
         }
         
         .nav-dot {
@@ -254,9 +244,7 @@
                 </div>
             </div>
             
-            <div class="meals-section" id="meals-section">
-                <!-- Meal cards will be added here -->
-            </div>
+            <div class="meals-section" id="meals-section"></div>
         </div>
         
         <div class="bottom-nav">
@@ -270,90 +258,75 @@
 
     <script>
         // Set current date
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const today = new Date();
-        document.getElementById('current-date').textContent = 
+        const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const today  = new Date();
+        document.getElementById('current-date').textContent =
             `${days[today.getDay()]}, ${months[today.getMonth()]} ${today.getDate()}`;
         
-        // Navigation function
-        function navigate(path) {
-            window.location.href = path;
-        }
+        function navigate(path) { window.location.href = path; }
         
-        // Load today's food and organize by meal
+        // Load today's food log from Flask
         fetch('/api/food-log')
-            .then(response => response.json())
+            .then(r => r.json())
             .then(data => {
                 displayMealCards(data);
                 calculateTotals(data);
             })
-            .catch(error => {
-                console.log('No data yet');
-                displayMealCards([]);
-            });
+            .catch(() => displayMealCards([]));
 
         function displayMealCards(foods) {
-            const mealsSection = document.getElementById('meals-section');
+            const section   = document.getElementById('meals-section');
             const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
             
-            // Group foods by meal type
-            const mealGroups = {};
-            mealTypes.forEach(type => {
-                mealGroups[type] = foods.filter(f => f.meal_type === type);
+            // Group foods by meal
+            const groups = {};
+            mealTypes.forEach(t => {
+                groups[t] = foods.filter(f => f.meal_type === t);
             });
             
-            // Create meal cards
-            mealsSection.innerHTML = mealTypes.map(mealType => {
-                const mealFoods = mealGroups[mealType];
-                const totalCalories = mealFoods.reduce((sum, f) => sum + (f.calories * f.servings), 0);
-                const foodCount = mealFoods.length;
+            section.innerHTML = mealTypes.map(mealType => {
+                const items    = groups[mealType];
+                const totalCal = items.reduce((sum, f) => sum + (f.calories * f.servings), 0);
+                const count    = items.length;
                 
                 return `
                     <div class="meal-card" onclick="viewMeal('${mealType}')">
                         <div class="meal-header">
                             <h3>${mealType}</h3>
-                            <div class="meal-calories">${Math.round(totalCalories)} cal</div>
+                            <div class="meal-calories">${Math.round(totalCal)} cal</div>
                         </div>
-                        ${foodCount > 0 ? `
-                            <div class="meal-items">${foodCount} item${foodCount !== 1 ? 's' : ''}</div>
-                        ` : `
-                            <div class="meal-items">No items yet</div>
-                        `}
+                        <div class="meal-items">
+                            ${count > 0 ? `${count} item${count !== 1 ? 's' : ''}` : 'No items yet'}
+                        </div>
                     </div>
                 `;
             }).join('');
         }
         
-        function viewMeal(mealType) {
-            window.location.href = `/meal/${mealType}`;
-        }
+        function viewMeal(mealType) { window.location.href = `/meal/${mealType}`; }
 
         function calculateTotals(meals) {
-            const totalCalories = 2000;
-            let consumed = 0;
-            let totalProtein = 0;
-            let totalCarbs = 0;
-            let totalFat = 0;
+            const goal = 2000;
+            let consumed = 0, protein = 0, carbs = 0, fat = 0;
 
-            meals.forEach(meal => {
-                consumed += meal.calories * meal.servings;
-                totalProtein += meal.protein * meal.servings;
-                totalCarbs += meal.carbs * meal.servings;
-                totalFat += meal.fat * meal.servings;
+            meals.forEach(m => {
+                consumed += m.calories * m.servings;
+                protein  += m.protein  * m.servings;
+                carbs    += m.carbs    * m.servings;
+                fat      += m.fat      * m.servings;
             });
 
-            const remaining = totalCalories - consumed;
-            document.getElementById('calories-remaining').textContent = Math.round(remaining);
-            document.getElementById('protein-value').textContent = Math.round(totalProtein) + 'g';
-            document.getElementById('carbs-value').textContent = Math.round(totalCarbs) + 'g';
-            document.getElementById('fats-value').textContent = Math.round(totalFat) + 'g';
+            document.getElementById('calories-remaining').textContent = Math.round(goal - consumed);
+            document.getElementById('protein-value').textContent = Math.round(protein) + 'g';
+            document.getElementById('carbs-value').textContent   = Math.round(carbs)   + 'g';
+            document.getElementById('fats-value').textContent    = Math.round(fat)     + 'g';
             
-            // Update circle
-            const percentage = (consumed / totalCalories) * 100;
-            const circumference = 502.4;
-            const offset = circumference - (percentage / 100 * circumference);
-            document.getElementById('progress-circle').style.strokeDashoffset = offset;
+            // Update the progress circle
+            const pct  = (consumed / goal) * 100;
+            const circ = 502.4;
+            document.getElementById('progress-circle').style.strokeDashoffset =
+                circ - (pct / 100 * circ);
         }
     </script>
 </body>
