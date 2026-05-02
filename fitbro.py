@@ -16,18 +16,18 @@ SMTP_HOST = 'smtp-relay.brevo.com'
 SMTP_PORT = 587
 SMTP_USER = os.environ.get('SMTP_USER', '')
 SMTP_PASS = os.environ.get('SMTP_PASS', '')
+SMTP_FROM = os.environ.get('SMTP_FROM', '') or os.environ.get('SMTP_USER', '')
 
 UNI_DOMAINS = ('.ac.uk', '.edu', '.edu.au', '.ac.nz', '.ac.in', '.edu.sg', '.ac.za')
 
 def send_verification_email(to_email, code):
     if not SMTP_USER or not SMTP_PASS:
-        # Dev mode: print to terminal instead of sending
         print(f'\n[DEV] Verification code for {to_email}: {code}\n')
-        return True
+        return True, None
     msg = MIMEMultipart('alternative')
     msg['Subject'] = 'FitBro – Your student verification code'
-    msg['From'] = SMTP_USER
-    msg['To'] = to_email
+    msg['From']    = SMTP_FROM
+    msg['To']      = to_email
     body = (
         f'Hi,\n\n'
         f'Your FitBro student verification code is:\n\n'
@@ -50,11 +50,11 @@ def send_verification_email(to_email, code):
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
             server.starttls()
             server.login(SMTP_USER, SMTP_PASS)
-            server.sendmail(SMTP_USER, to_email, msg.as_string())
-        return True
+            server.sendmail(SMTP_FROM, to_email, msg.as_string())
+        return True, None
     except Exception as e:
         print(f'[EMAIL ERROR] {e}')
-        return False
+        return False, str(e)
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
@@ -204,8 +204,9 @@ def send_verification():
     session['stu_expires'] = (datetime.now() + timedelta(minutes=10)).isoformat()
     session['stu_pending'] = {'username': username, 'email': email, 'password': password}
 
-    if not send_verification_email(email, code):
-        return jsonify({'success': False, 'error': 'Failed to send email. Please try again.'})
+    sent, err = send_verification_email(email, code)
+    if not sent:
+        return jsonify({'success': False, 'error': f'Failed to send email: {err}'})
 
     return jsonify({'success': True})
 
@@ -806,6 +807,7 @@ def delete_account():
     conn.close()
     session.clear()
     return jsonify({'success': True})
+
 
 
 if __name__ == '__main__':
