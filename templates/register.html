@@ -66,6 +66,15 @@
 
         .form-group input:focus { border-color: #48c774; }
 
+        .uni-hint {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .uni-hint.visible { display: block; }
+
         .checkbox-group {
             display: flex;
             align-items: center;
@@ -77,7 +86,6 @@
         }
 
         .checkbox-group input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
-
         .checkbox-group label { font-size: 14px; color: #2c3e50; cursor: pointer; margin: 0; }
 
         .student-badge {
@@ -91,7 +99,7 @@
             margin-left: 5px;
         }
 
-        .register-button {
+        .primary-button {
             width: 100%;
             padding: 15px;
             background: linear-gradient(135deg, #48c774, #3ab566);
@@ -104,8 +112,8 @@
             transition: transform 0.2s;
         }
 
-        .register-button:hover    { transform: translateY(-2px); }
-        .register-button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .primary-button:hover    { transform: translateY(-2px); }
+        .primary-button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
         .error-message {
             background: #fadbd8;
@@ -125,6 +133,78 @@
         }
 
         .login-link a { color: #48c774; text-decoration: none; font-weight: 600; }
+
+        /* ── Verification screen ── */
+        #verify-screen { display: none; }
+
+        .verify-info {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .verify-icon {
+            font-size: 52px;
+            margin-bottom: 12px;
+        }
+
+        .verify-info h2 { font-size: 22px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; }
+
+        .verify-info p {
+            font-size: 14px;
+            color: #7f8c8d;
+            line-height: 1.5;
+        }
+
+        .verify-info strong { color: #2c3e50; }
+
+        .code-input {
+            width: 100%;
+            padding: 18px;
+            border: 2px solid #ecf0f1;
+            border-radius: 10px;
+            font-size: 32px;
+            text-align: center;
+            letter-spacing: 12px;
+            font-weight: 700;
+            color: #2c3e50;
+            outline: none;
+            transition: border 0.3s;
+            margin-bottom: 18px;
+        }
+
+        .code-input:focus { border-color: #48c774; }
+
+        .resend-row {
+            text-align: center;
+            margin-top: 14px;
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+
+        .resend-row button {
+            background: none;
+            border: none;
+            color: #48c774;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        .back-link button {
+            background: none;
+            border: none;
+            color: #7f8c8d;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .back-link button:hover { color: #2c3e50; }
     </style>
 </head>
 <body>
@@ -136,91 +216,235 @@
         </div>
 
         <div class="content">
-            <div class="error-message" id="error-message"></div>
+            <!-- Step 1: Registration form -->
+            <div id="register-screen">
+                <div class="error-message" id="reg-error"></div>
 
-            <form id="register-form">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username"
-                           placeholder="Choose a username" required>
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" placeholder="Choose a username" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" placeholder="your@email.com" required>
+                        <div class="uni-hint" id="uni-hint">
+                            Must be a university email — e.g. .ac.uk, .edu, .edu.au
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" placeholder="Create a password" minlength="6" required>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="is_student">
+                        <label for="is_student">
+                            I'm a student <span class="student-badge">FREE</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="primary-button" id="register-btn">
+                        Create Account
+                    </button>
+                </form>
+
+                <div class="login-link">
+                    Already have an account? <a href="/login">Log in</a>
+                </div>
+            </div>
+
+            <!-- Step 2: Verification code -->
+            <div id="verify-screen">
+                <div class="error-message" id="verify-error"></div>
+
+                <div class="verify-info">
+                    <div class="verify-icon">📧</div>
+                    <h2>Check your inbox</h2>
+                    <p>We sent a 6-digit code to<br><strong id="sent-to-email"></strong></p>
                 </div>
 
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email"
-                           placeholder="your@email.com" required>
-                </div>
+                <input type="text" class="code-input" id="code-input"
+                       maxlength="6" inputmode="numeric" placeholder="000000"
+                       oninput="this.value=this.value.replace(/\D/g,'')">
 
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password"
-                           placeholder="Create a password" minlength="6" required>
-                </div>
-
-                <div class="checkbox-group">
-                    <input type="checkbox" id="is_student" name="is_student">
-                    <label for="is_student">
-                        I'm a student <span class="student-badge">FREE</span>
-                    </label>
-                </div>
-
-                <button type="submit" class="register-button" id="register-btn">
-                    Create Account
+                <button class="primary-button" id="verify-btn" onclick="submitCode()">
+                    Verify &amp; Create Account
                 </button>
-            </form>
 
-            <div class="login-link">
-                Already have an account? <a href="/login">Log in</a>
+                <div class="resend-row">
+                    Didn't get it? <button onclick="resendCode()">Resend code</button>
+                </div>
+
+                <div class="back-link">
+                    <button onclick="goBack()">← Back to sign up</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        const form        = document.getElementById('register-form');
-        const errorDiv    = document.getElementById('error-message');
-        const registerBtn = document.getElementById('register-btn');
+        const isStudentCheckbox = document.getElementById('is_student');
+        const uniHint           = document.getElementById('uni-hint');
+        const emailInput        = document.getElementById('email');
 
-        form.addEventListener('submit', async (e) => {
+        isStudentCheckbox.addEventListener('change', () => {
+            const student = isStudentCheckbox.checked;
+            uniHint.classList.toggle('visible', student);
+            emailInput.placeholder = student ? 'your@university.ac.uk' : 'your@email.com';
+        });
+
+        // ── Step 1: submit form ──
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const username   = document.getElementById('username').value;
-            const email      = document.getElementById('email').value;
+            const username   = document.getElementById('username').value.trim();
+            const email      = document.getElementById('email').value.trim();
             const password   = document.getElementById('password').value;
-            const is_student = document.getElementById('is_student').checked;
+            const is_student = isStudentCheckbox.checked;
+            const errorDiv   = document.getElementById('reg-error');
+            const btn        = document.getElementById('register-btn');
 
             if (password.length < 6) {
-                errorDiv.textContent   = 'Password must be at least 6 characters';
-                errorDiv.style.display = 'block';
+                showError(errorDiv, 'Password must be at least 6 characters');
                 return;
             }
 
-            registerBtn.disabled      = true;
-            registerBtn.textContent   = 'Creating account...';
-            errorDiv.style.display    = 'none';
+            if (is_student) {
+                // Student flow → send verification code first
+                btn.disabled    = true;
+                btn.textContent = 'Sending code...';
+                errorDiv.style.display = 'none';
+
+                try {
+                    const res  = await fetch('/api/send-verification', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, email, password })
+                    });
+                    const data = await res.json();
+
+                    if (data.success) {
+                        document.getElementById('sent-to-email').textContent = email;
+                        document.getElementById('register-screen').style.display = 'none';
+                        document.getElementById('verify-screen').style.display   = 'block';
+                        document.getElementById('code-input').focus();
+                    } else {
+                        showError(errorDiv, data.error || 'Could not send code');
+                    }
+                } catch {
+                    showError(errorDiv, 'Connection error. Please try again.');
+                }
+
+                btn.disabled    = false;
+                btn.textContent = 'Create Account';
+            } else {
+                // Non-student flow → register directly
+                btn.disabled    = true;
+                btn.textContent = 'Creating account...';
+                errorDiv.style.display = 'none';
+
+                try {
+                    const res  = await fetch('/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, email, password, is_student: false })
+                    });
+                    const data = await res.json();
+
+                    if (data.success) {
+                        window.location.href = '/';
+                    } else {
+                        showError(errorDiv, data.error || 'Registration failed');
+                        btn.disabled    = false;
+                        btn.textContent = 'Create Account';
+                    }
+                } catch {
+                    showError(errorDiv, 'Connection error. Please try again.');
+                    btn.disabled    = false;
+                    btn.textContent = 'Create Account';
+                }
+            }
+        });
+
+        // ── Step 2: verify code ──
+        async function submitCode() {
+            const code      = document.getElementById('code-input').value.trim();
+            const errorDiv  = document.getElementById('verify-error');
+            const btn       = document.getElementById('verify-btn');
+
+            if (code.length !== 6) {
+                showError(errorDiv, 'Please enter the 6-digit code');
+                return;
+            }
+
+            btn.disabled    = true;
+            btn.textContent = 'Verifying...';
+            errorDiv.style.display = 'none';
 
             try {
-                const res  = await fetch('/register', {
+                const res  = await fetch('/api/verify-student', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email, password, is_student })
+                    body: JSON.stringify({ code })
                 });
                 const data = await res.json();
 
                 if (data.success) {
                     window.location.href = '/';
                 } else {
-                    errorDiv.textContent    = data.error || 'Registration failed';
-                    errorDiv.style.display  = 'block';
-                    registerBtn.disabled    = false;
-                    registerBtn.textContent = 'Create Account';
+                    showError(errorDiv, data.error || 'Verification failed');
+                    btn.disabled    = false;
+                    btn.textContent = 'Verify & Create Account';
                 }
             } catch {
-                errorDiv.textContent    = 'Connection error. Please try again.';
-                errorDiv.style.display  = 'block';
-                registerBtn.disabled    = false;
-                registerBtn.textContent = 'Create Account';
+                showError(errorDiv, 'Connection error. Please try again.');
+                btn.disabled    = false;
+                btn.textContent = 'Verify & Create Account';
             }
+        }
+
+        // Allow pressing Enter in the code box
+        document.getElementById('code-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') submitCode();
         });
+
+        async function resendCode() {
+            // Re-trigger send using the same session pending data
+            const res  = await fetch('/api/send-verification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: '',  // server uses session pending data on resend
+                    email: document.getElementById('sent-to-email').textContent,
+                    password: ''
+                })
+            });
+            const data = await res.json();
+            const errorDiv = document.getElementById('verify-error');
+            if (data.success) {
+                document.getElementById('code-input').value = '';
+                showError(errorDiv, 'New code sent!', '#e8f8f0', '#27ae60');
+            } else {
+                showError(errorDiv, data.error || 'Could not resend');
+            }
+        }
+
+        function goBack() {
+            document.getElementById('verify-screen').style.display   = 'none';
+            document.getElementById('register-screen').style.display = 'block';
+            document.getElementById('verify-error').style.display    = 'none';
+            document.getElementById('code-input').value = '';
+        }
+
+        function showError(el, msg, bg, color) {
+            el.textContent        = msg;
+            el.style.background   = bg    || '#fadbd8';
+            el.style.color        = color || '#e74c3c';
+            el.style.display      = 'block';
+        }
     </script>
 </body>
 </html>

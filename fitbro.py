@@ -1,9 +1,60 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 import sqlite3
-from datetime import date
+from datetime import date, datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 import secrets
 import requests as http
+import smtplib
+import os
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from dotenv import load_dotenv
+
+load_dotenv()
+
+SMTP_HOST = 'smtp-relay.brevo.com'
+SMTP_PORT = 587
+SMTP_USER = os.environ.get('SMTP_USER', '')
+SMTP_PASS = os.environ.get('SMTP_PASS', '')
+
+UNI_DOMAINS = ('.ac.uk', '.edu', '.edu.au', '.ac.nz', '.ac.in', '.edu.sg', '.ac.za')
+
+def send_verification_email(to_email, code):
+    if not SMTP_USER or not SMTP_PASS:
+        # Dev mode: print to terminal instead of sending
+        print(f'\n[DEV] Verification code for {to_email}: {code}\n')
+        return True
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = 'FitBro – Your student verification code'
+    msg['From'] = SMTP_USER
+    msg['To'] = to_email
+    body = (
+        f'Hi,\n\n'
+        f'Your FitBro student verification code is:\n\n'
+        f'  {code}\n\n'
+        f'It expires in 10 minutes. If you did not request this, ignore this email.\n\n'
+        f'– The FitBro Team'
+    )
+    html = f'''<div style="font-family:sans-serif;max-width:400px;margin:auto">
+        <h2 style="color:#48c774">FitBro Student Verification</h2>
+        <p>Your verification code is:</p>
+        <div style="font-size:36px;font-weight:700;letter-spacing:10px;color:#2c3e50;
+                    background:#f0f9f4;padding:20px;border-radius:10px;text-align:center">
+            {code}
+        </div>
+        <p style="color:#7f8c8d;font-size:13px">Expires in 10 minutes.</p>
+    </div>'''
+    msg.attach(MIMEText(body, 'plain'))
+    msg.attach(MIMEText(html, 'html'))
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASS)
+            server.sendmail(SMTP_USER, to_email, msg.as_string())
+        return True
+    except Exception as e:
+        print(f'[EMAIL ERROR] {e}')
+        return False
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
@@ -121,6 +172,88 @@ def register():
         session['username'] = username
         return jsonify({'success': True})
     return render_template('register.html')
+
+
+@app.route('/api/send-verification', methods=['POST'])
+def send_verification():
+    data = request.json
+    email    = (data.get('email') or '').strip().lower()
+    username = (data.get('username') or '').strip()
+    password =  data.get('password') or ''
+
+    if not email or not username or not password:
+        return jsonify({'success': False, 'error': 'All fields required'})
+
+    domain = email.split('@')[-1] if '@' in email else ''
+    if not any(domain.endswith(d) for d in UNI_DOMAINS):
+        return jsonify({'success': False,
+                        'error': 'Please use a university email (.ac.uk, .edu, etc.)'})
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT id FROM users WHERE email = ?', (email,))
+    if cursor.fetchone():
+        conn.close()
+        return jsonify({'success': False, 'error': 'Email already registered'})
+    conn.close()
+
+    code = str(secrets.randbelow(900000) + 100000)
+    session['stu_code']    = code
+    session['stu_email']   = email
+    session['stu_expires'] = (datetime.now() + timedelta(minutes=10)).isoformat()
+    session['stu_pending'] = {'username': username, 'email': email, 'password': password}
+
+    if not send_verification_email(email, code):
+        return jsonify({'success': False, 'error': 'Failed to send email. Please try again.'})
+
+    return jsonify({'success': True})
+
+
+@app.route('/api/verify-student', methods=['POST'])
+def verify_student():
+    data = request.json
+    code = (data.get('code') or '').strip()
+
+    stored_code    = session.get('stu_code')
+    stored_expires = session.get('stu_expires')
+    pending        = session.get('stu_pending')
+
+    if not stored_code or not pending:
+        return jsonify({'success': False, 'error': 'Session expired. Please start again.'})
+
+    if datetime.now() > datetime.fromisoformat(stored_expires):
+        return jsonify({'success': False, 'error': 'Code expired. Please request a new one.'})
+
+    if code != stored_code:
+        return jsonify({'success': False, 'error': 'Incorrect code. Please try again.'})
+
+    # Code is valid — create the account
+    username = pending['username']
+    email    = pending['email']
+    hashed   = generate_password_hash(pending['password'])
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT id FROM users WHERE email = ?', (email,))
+    if cursor.fetchone():
+        conn.close()
+        return jsonify({'success': False, 'error': 'Email already registered'})
+
+    cursor.execute('''
+        INSERT INTO users (username, email, password, is_student, age, height,
+                           daily_calorie_goal, daily_protein_goal, daily_carbs_goal, daily_fat_goal)
+        VALUES (?, ?, ?, 1, 25, 175.0, 2000, 150, 200, 65)
+    ''', (username, email, hashed))
+    conn.commit()
+    user_id = cursor.lastrowid
+    conn.close()
+
+    for key in ('stu_code', 'stu_email', 'stu_expires', 'stu_pending'):
+        session.pop(key, None)
+
+    session['user_id']  = user_id
+    session['username'] = username
+    return jsonify({'success': True})
 
 
 @app.route('/logout')
