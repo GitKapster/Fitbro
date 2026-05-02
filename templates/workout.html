@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FitBro - Workout</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .phone-frame {
+            width: 400px;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            height: 750px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #48c774, #3ab566);
+            padding: 30px 25px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .header h1 { font-size: 28px; font-weight: 600; margin-bottom: 5px; }
+        .header p  { font-size: 14px; opacity: 0.9; }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: white;
+        }
+
+        .section { margin-bottom: 24px; }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .student-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 8px;
+            letter-spacing: 0.3px;
+        }
+
+        /* Log form */
+        .log-form { display: flex; flex-direction: column; gap: 10px; }
+
+        .log-form input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+            color: #2c3e50;
+        }
+
+        .log-form input::placeholder { color: #bdc3c7; }
+        .log-form input:focus { border-color: #48c774; }
+
+        .form-row { display: flex; gap: 10px; }
+        .form-row input { flex: 1; }
+
+        .form-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .form-group { display: flex; flex-direction: column; flex: 1; }
+
+        .log-btn {
+            background: linear-gradient(135deg, #48c774, #3ab566);
+            color: white;
+            border: none;
+            padding: 13px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .log-btn:hover { opacity: 0.88; }
+
+        /* Exercise cards */
+        .exercise-card {
+            background: #f8f9fa;
+            border-left: 4px solid #48c774;
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 9px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .exercise-info { flex: 1; }
+        .exercise-name { font-size: 15px; font-weight: 600; color: #2c3e50; }
+
+        .sets-reps-pill {
+            display: inline-block;
+            background: #e8f5e9;
+            color: #2e7d32;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-top: 5px;
+        }
+
+        .delete-btn {
+            background: #ff4757;
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+
+        .delete-btn:hover { background: #e84043; }
+
+        /* Session cards (template workouts logged as a group) */
+        .session-card {
+            background: white;
+            border-radius: 14px;
+            margin-bottom: 9px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .session-header {
+            background: linear-gradient(135deg, #2d6a4f, #1b4332);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .session-info { flex: 1; }
+        .session-name { font-size: 15px; font-weight: 700; color: white; }
+
+        .session-count-pill {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-top: 5px;
+        }
+
+        .session-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .session-arrow {
+            color: rgba(255,255,255,0.7);
+            font-size: 13px;
+            transition: transform 0.2s;
+        }
+
+        .session-exercises {
+            background: #f0f9f4;
+            padding: 10px 16px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .session-ex-row {
+            background: white;
+            border-radius: 9px;
+            padding: 9px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .session-ex-info { flex: 1; }
+        .session-ex-name { font-size: 13px; font-weight: 600; color: #2c3e50; transition: color 0.2s; }
+        .session-ex-name.done { color: #b2bec3; text-decoration: line-through; }
+        .session-ex-detail { font-size: 11px; color: #95a5a6; margin-top: 2px; }
+
+        .tick-btn {
+            background: none;
+            border: 2px solid #d0d0d0;
+            color: #d0d0d0;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .tick-btn:hover:not(:disabled) { border-color: #48c774; color: #48c774; }
+
+        .tick-btn.ticked {
+            background: #48c774;
+            border-color: #48c774;
+            color: white;
+            cursor: default;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 24px 10px;
+            color: #bdc3c7;
+            font-size: 14px;
+        }
+
+        .empty-state i { font-size: 34px; margin-bottom: 10px; display: block; }
+
+        /* Template cards */
+        .template-card {
+            background: white;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .template-banner {
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .template-banner-icon {
+            font-size: 22px;
+            background: rgba(255,255,255,0.2);
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .template-banner-text { flex: 1; }
+        .template-name { font-size: 15px; font-weight: 700; color: white; }
+        .template-desc { font-size: 11px; color: rgba(255,255,255,0.85); margin-top: 2px; }
+        .template-ex-count { font-size: 12px; color: rgba(255,255,255,0.85); white-space: nowrap; }
+
+        .template-exercises { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; }
+
+        .template-exercise-row {
+            background: white;
+            border-radius: 10px;
+            padding: 9px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .template-ex-name { font-size: 13px; font-weight: 600; color: #2c3e50; }
+        .template-ex-meta { font-size: 11px; color: #7f8c8d; margin-top: 2px; }
+
+        .begin-workout-btn {
+            background: linear-gradient(135deg, #48c774, #3ab566);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 11px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: opacity 0.2s;
+        }
+
+        .begin-workout-btn:hover  { opacity: 0.88; }
+        .begin-workout-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2c3e50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 200;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .toast.show { opacity: 1; }
+
+        /* Bottom nav */
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            background: linear-gradient(135deg, #2d6a4f, #1b4332);
+            flex-shrink: 0;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.4);
+            font-size: 10px;
+            cursor: pointer;
+            padding: 4px 10px;
+            transition: color 0.2s;
+        }
+
+        .nav-item i { font-size: 18px; }
+        .nav-item.active { color: white; }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="header">
+            <h1>Workout</h1>
+            <p id="current-date"></p>
+        </div>
+
+        <div class="content">
+
+            <!-- Log Exercise Form -->
+            <div class="section">
+                <div class="section-title">Log Exercise</div>
+                <div class="log-form">
+                    <input type="text" id="exercise-name" placeholder="Exercise name (e.g. Push-ups, Squats)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <div class="form-label">Sets</div>
+                            <input type="number" id="sets" placeholder="e.g. 3" min="1">
+                        </div>
+                        <div class="form-group">
+                            <div class="form-label">Reps</div>
+                            <input type="number" id="reps" placeholder="e.g. 10" min="1">
+                        </div>
+                    </div>
+                    <button class="log-btn" onclick="logExercise()">
+                        <i class="fas fa-plus"></i>&nbsp; Log Exercise
+                    </button>
+                </div>
+            </div>
+
+            <!-- Today's Activity -->
+            <div class="section">
+                <div class="section-title">Today's Activity</div>
+                <div id="exercise-list">
+                    <div class="empty-state">
+                        <i class="fas fa-dumbbell"></i>
+                        No exercises logged yet
+                    </div>
+                </div>
+            </div>
+
+            <!-- Beginner Templates — student users only -->
+            <div id="templates-section" style="display:none">
+                <div class="section-title">
+                    Student Workouts
+                    <span class="student-badge">STUDENT</span>
+                </div>
+                <div id="templates-list"></div>
+            </div>
+
+        </div>
+
+        <div class="toast" id="toast"></div>
+
+        <div class="bottom-nav">
+            <button class="nav-item" onclick="navigate('/')"><i class="fas fa-house"></i><span>Home</span></button>
+            <button class="nav-item" onclick="navigate('/add-food')"><i class="fas fa-plus"></i><span>Add</span></button>
+            <button class="nav-item" onclick="navigate('/stats')"><i class="fas fa-calendar-days"></i><span>Diary</span></button>
+            <button class="nav-item" onclick="navigate('/community')"><i class="fas fa-robot"></i><span>NutriBot</span></button>
+            <button class="nav-item active" onclick="navigate('/workout')"><i class="fas fa-dumbbell"></i><span>Workout</span></button>
+        </div>
+    </div>
+
+    <script>
+        const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const today  = new Date();
+        document.getElementById('current-date').textContent =
+            `${days[today.getDay()]}, ${months[today.getMonth()]} ${today.getDate()}`;
+
+        function navigate(path) { window.location.href = path; }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        /* ── Colour theme for student workout cards ── */
+        const CARD_COLOR = { gradient: 'linear-gradient(135deg, #48c774, #2d9e5f)', light: '#f0f9f4', accent: '#48c774', icon: '💪' };
+
+        /* ── Pre-built student templates (sets × reps) ── */
+        const TEMPLATES = [
+            {
+                name: 'Full Body Starter',
+                desc: '3× per week · great for beginners',
+                exercises: [
+                    { name: 'Push-ups',          sets: 3, reps: 10 },
+                    { name: 'Bodyweight Squats',  sets: 3, reps: 15 },
+                    { name: 'Lunges',             sets: 3, reps: 10 },
+                    { name: 'Glute Bridges',      sets: 3, reps: 15 },
+                    { name: 'Mountain Climbers',  sets: 3, reps: 20 }
+                ]
+            },
+            {
+                name: 'HIIT Bodyweight',
+                desc: 'Any day · high intensity circuits',
+                exercises: [
+                    { name: 'Jumping Jacks', sets: 3, reps: 30 },
+                    { name: 'High Knees',    sets: 3, reps: 20 },
+                    { name: 'Burpees',       sets: 3, reps: 10 },
+                    { name: 'Jump Squats',   sets: 3, reps: 15 }
+                ]
+            },
+            {
+                name: 'Upper Body Focus',
+                desc: '2× per week · no equipment needed',
+                exercises: [
+                    { name: 'Push-ups',            sets: 4, reps: 12 },
+                    { name: 'Tricep Dips (chair)', sets: 3, reps: 10 },
+                    { name: 'Pike Push-ups',        sets: 3, reps: 10 },
+                    { name: 'Superman Hold',        sets: 3, reps: 12 }
+                ]
+            }
+        ];
+
+        function renderTemplates() {
+            const list = document.getElementById('templates-list');
+            const c = CARD_COLOR;
+            list.innerHTML = TEMPLATES.map((t, idx) => {
+                const rows = t.exercises.map(e => `
+                    <div class="template-exercise-row" style="border-left: 3px solid ${c.accent}">
+                        <div>
+                            <div class="template-ex-name">${e.name}</div>
+                            <div class="template-ex-meta">${e.sets} sets &times; ${e.reps} reps</div>
+                        </div>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="template-card">
+                        <div class="template-banner" style="background: ${c.gradient}">
+                            <div class="template-banner-icon">${c.icon}</div>
+                            <div class="template-banner-text">
+                                <div class="template-name">${t.name}</div>
+                                <div class="template-desc">${t.desc}</div>
+                            </div>
+                        </div>
+                        <div class="template-exercises" style="background: ${c.light}">${rows}</div>
+                        <div style="padding: 0 14px 14px">
+                            <button class="begin-workout-btn" id="begin-btn-${idx}" onclick="beginWorkout(${idx})" style="background: ${c.gradient}">
+                                <i class="fas fa-play"></i>&nbsp; Begin Workout
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function beginWorkout(idx) {
+            const template = TEMPLATES[idx];
+            const btn = document.getElementById(`begin-btn-${idx}`);
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>&nbsp; Logging...';
+
+            try {
+                await fetch('/api/log-workout-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: template.name,
+                        exercises: template.exercises.map(e => ({
+                            exercise_name: e.name,
+                            sets: e.sets,
+                            reps: e.reps
+                        }))
+                    })
+                });
+                loadExercises();
+                showToast(`${template.name} logged!`);
+                document.querySelector('.content').scrollTop = 0;
+            } catch {
+                showToast('Something went wrong, try again');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-play"></i>&nbsp; Begin Workout';
+            }
+        }
+
+        /* ── Exercise log ── */
+        function renderExercises(data) {
+            const list = document.getElementById('exercise-list');
+            const sessions    = data.sessions    || [];
+            const individual  = data.individual  || [];
+
+            if (!sessions.length && !individual.length) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-dumbbell"></i>
+                        No exercises logged yet
+                    </div>`;
+                return;
+            }
+
+            const sessionHTML = sessions.map(s => {
+                const done    = s.exercises.filter(e => e.completed).length;
+                const total   = s.exercises.length;
+                const allDone = done === total;
+                const expanded = !allDone;
+
+                const exRows = s.exercises.map(e => `
+                    <div class="session-ex-row" id="ex-row-${e.id}">
+                        <div class="session-ex-info">
+                            <div class="session-ex-name ${e.completed ? 'done' : ''}">${e.exercise_name}</div>
+                            <div class="session-ex-detail">${e.sets} sets &times; ${e.reps} reps</div>
+                        </div>
+                        <button class="tick-btn ${e.completed ? 'ticked' : ''}"
+                                ${e.completed ? 'disabled' : `onclick="completeExercise(${e.id}, ${s.id})"`}>
+                            <i class="fas ${e.completed ? 'fa-circle-check' : 'fa-circle'}"></i>
+                        </button>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="session-card">
+                        <div class="session-header" onclick="toggleSession(${s.id})">
+                            <div class="session-info">
+                                <div class="session-name">${s.name}</div>
+                                <span class="session-count-pill" id="progress-${s.id}">${done}/${total} done</span>
+                            </div>
+                            <div class="session-actions">
+                                <i class="fas fa-chevron-down session-arrow" id="arrow-${s.id}"
+                                   style="transform: ${expanded ? 'rotate(180deg)' : ''}"></i>
+                                <button class="delete-btn" onclick="event.stopPropagation(); deleteSession(${s.id})">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="session-exercises" id="session-ex-${s.id}" style="display:${expanded ? 'flex' : 'none'}">
+                            ${exRows}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const individualHTML = individual.map(e => `
+                <div class="exercise-card">
+                    <div class="exercise-info">
+                        <div class="exercise-name">${e.exercise_name}</div>
+                        <span class="sets-reps-pill">${e.sets} sets &times; ${e.reps} reps</span>
+                    </div>
+                    <button class="delete-btn" onclick="deleteExercise(${e.id})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            list.innerHTML = sessionHTML + individualHTML;
+        }
+
+        function toggleSession(id) {
+            const el    = document.getElementById(`session-ex-${id}`);
+            const arrow = document.getElementById(`arrow-${id}`);
+            const open  = el.style.display !== 'none';
+            el.style.display      = open ? 'none' : 'block';
+            arrow.style.transform = open ? ''      : 'rotate(180deg)';
+        }
+
+        function loadExercises() {
+            fetch('/api/exercise-log')
+                .then(r => r.json())
+                .then(data => renderExercises(data))
+                .catch(() => renderExercises({ sessions: [], individual: [] }));
+        }
+
+        function logExercise() {
+            const name = document.getElementById('exercise-name').value.trim();
+            const sets = parseInt(document.getElementById('sets').value);
+            const reps = parseInt(document.getElementById('reps').value);
+
+            if (!name)              { showToast('Please enter an exercise name'); return; }
+            if (!sets || sets < 1)  { showToast('Please enter a valid number of sets'); return; }
+            if (!reps || reps < 1)  { showToast('Please enter a valid number of reps'); return; }
+
+            fetch('/api/log-exercise', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ exercise_name: name, sets, reps })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('exercise-name').value = '';
+                    document.getElementById('sets').value          = '';
+                    document.getElementById('reps').value          = '';
+                    loadExercises();
+                    showToast('Exercise logged!');
+                }
+            })
+            .catch(() => showToast('Something went wrong, try again'));
+        }
+
+        function deleteExercise(id) {
+            fetch(`/api/delete-exercise/${id}`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(() => { loadExercises(); showToast('Exercise removed'); })
+                .catch(() => showToast('Could not delete exercise'));
+        }
+
+        function completeExercise(exId, sessionId) {
+            fetch(`/api/exercise-log/${exId}/complete`, { method: 'PATCH' })
+                .then(r => r.json())
+                .then(() => {
+                    const row = document.getElementById(`ex-row-${exId}`);
+                    row.querySelector('.session-ex-name').classList.add('done');
+                    const btn = row.querySelector('.tick-btn');
+                    btn.classList.add('ticked');
+                    btn.querySelector('i').className = 'fas fa-circle-check';
+                    btn.disabled = true;
+                    btn.onclick  = null;
+                    updateProgress(sessionId);
+                })
+                .catch(() => showToast('Could not update exercise'));
+        }
+
+        function updateProgress(sessionId) {
+            const container = document.getElementById(`session-ex-${sessionId}`);
+            const total = container.querySelectorAll('.tick-btn').length;
+            const done  = container.querySelectorAll('.tick-btn.ticked').length;
+            document.getElementById(`progress-${sessionId}`).textContent = `${done}/${total} done`;
+            if (done === total) {
+                toggleSession(sessionId);
+                showToast('Workout complete!');
+            }
+        }
+
+        function deleteSession(id) {
+            fetch(`/api/delete-session/${id}`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(() => { loadExercises(); showToast('Workout removed'); })
+                .catch(() => showToast('Could not delete workout'));
+        }
+
+        /* ── Init ── */
+        fetch('/api/user')
+            .then(r => r.json())
+            .then(user => {
+                if (user.is_student) {
+                    document.getElementById('templates-section').style.display = 'block';
+                    renderTemplates();
+                }
+            });
+
+        loadExercises();
+    </script>
+</body>
+</html>

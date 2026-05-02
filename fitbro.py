@@ -8,6 +8,51 @@ import requests as http
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
+
+def migrate_exercise_log():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA table_info(exercise_log)")
+    columns = [col['name'] for col in cursor.fetchall()]
+    if 'sets' not in columns:
+        cursor.execute('ALTER TABLE exercise_log RENAME TO exercise_log_old')
+        cursor.execute('''
+            CREATE TABLE exercise_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                exercise_name TEXT NOT NULL,
+                sets INTEGER NOT NULL DEFAULT 3,
+                reps INTEGER NOT NULL DEFAULT 10,
+                date TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+            )
+        ''')
+        cursor.execute('DROP TABLE exercise_log_old')
+        conn.commit()
+    conn.close()
+
+
+def migrate_workout_sessions():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS workout_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            date TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+    ''')
+    cursor.execute("PRAGMA table_info(exercise_log)")
+    columns = [col['name'] for col in cursor.fetchall()]
+    if 'session_id' not in columns:
+        cursor.execute('ALTER TABLE exercise_log ADD COLUMN session_id INTEGER REFERENCES workout_sessions(id)')
+    if 'completed' not in columns:
+        cursor.execute('ALTER TABLE exercise_log ADD COLUMN completed INTEGER DEFAULT 0')
+    conn.commit()
+    conn.close()
+
 OFF_TIMEOUT = 5
 
 
@@ -123,6 +168,140 @@ def nutribot_info():
 @login_required
 def profile():
     return render_template('profile.html')
+
+
+@app.route('/workout')
+@login_required
+def workout():
+    return render_template('workout.html')
+
+
+@app.route('/api/log-exercise', methods=['POST'])
+@login_required
+def log_exercise():
+    data = request.json
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO exercise_log (user_id, exercise_name, sets, reps, date)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (
+        session['user_id'],
+        data['exercise_name'],
+        data.get('sets', 3),
+        data.get('reps', 10),
+        data.get('date', str(date.today()))
+    ))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+
+@app.route('/api/log-workout-session', methods=['POST'])
+@login_required
+def log_workout_session():
+    data = request.json
+    name = data.get('name', '').strip()
+    exercises = data.get('exercises', [])
+    if not name or not exercises:
+        return jsonify({'success': False})
+    today = str(date.today())
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        'INSERT INTO workout_sessions (user_id, name, date) VALUES (?, ?, ?)',
+        (session['user_id'], name, today)
+    )
+    workout_session_id = cursor.lastrowid
+    for e in exercises:
+        cursor.execute('''
+            INSERT INTO exercise_log (user_id, exercise_name, sets, reps, date, session_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (session['user_id'], e['exercise_name'], e['sets'], e['reps'], today, workout_session_id))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+
+@app.route('/api/exercise-log')
+@login_required
+def get_exercise_log():
+    conn = get_db()
+    cursor = conn.cursor()
+    today = str(date.today())
+    user_id = session['user_id']
+
+    cursor.execute('''
+        SELECT ws.id as session_id, ws.name as session_name,
+               el.id, el.exercise_name, el.sets, el.reps, el.completed
+        FROM workout_sessions ws
+        JOIN exercise_log el ON el.session_id = ws.id
+        WHERE ws.user_id = ? AND ws.date = ?
+        ORDER BY ws.id, el.id
+    ''', (user_id, today))
+    sessions_dict = {}
+    for row in cursor.fetchall():
+        sid = row['session_id']
+        if sid not in sessions_dict:
+            sessions_dict[sid] = {'id': sid, 'name': row['session_name'], 'exercises': []}
+        sessions_dict[sid]['exercises'].append({
+            'id': row['id'],
+            'exercise_name': row['exercise_name'],
+            'sets': row['sets'],
+            'reps': row['reps'],
+            'completed': bool(row['completed'])
+        })
+
+    cursor.execute('''
+        SELECT id, exercise_name, sets, reps
+        FROM exercise_log
+        WHERE user_id = ? AND date = ? AND session_id IS NULL
+        ORDER BY id DESC
+    ''', (user_id, today))
+    individual = [dict(e) for e in cursor.fetchall()]
+
+    conn.close()
+    return jsonify({'sessions': list(sessions_dict.values()), 'individual': individual})
+
+
+@app.route('/api/delete-exercise/<int:log_id>', methods=['DELETE'])
+@login_required
+def delete_exercise(log_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM exercise_log WHERE id = ? AND user_id = ?', (log_id, session['user_id']))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+
+@app.route('/api/delete-session/<int:workout_session_id>', methods=['DELETE'])
+@login_required
+def delete_session(workout_session_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT id FROM workout_sessions WHERE id = ? AND user_id = ?',
+                   (workout_session_id, session['user_id']))
+    if not cursor.fetchone():
+        conn.close()
+        return jsonify({'success': False})
+    cursor.execute('DELETE FROM exercise_log WHERE session_id = ?', (workout_session_id,))
+    cursor.execute('DELETE FROM workout_sessions WHERE id = ?', (workout_session_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+
+@app.route('/api/exercise-log/<int:ex_id>/complete', methods=['PATCH'])
+@login_required
+def complete_exercise(ex_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('UPDATE exercise_log SET completed = 1 WHERE id = ? AND user_id = ?',
+                   (ex_id, session['user_id']))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
 
 
 @app.route('/api/food-log')
@@ -478,4 +657,6 @@ def update_goals():
 
 
 if __name__ == '__main__':
+    migrate_exercise_log()
+    migrate_workout_sessions()
     app.run(debug=True)

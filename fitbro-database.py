@@ -57,15 +57,28 @@ def init_db():
         )
     ''')
     
-    # Exercise log
+    # Workout sessions (groups of exercises logged together from a template)
+    cursor.execute('''
+        CREATE TABLE workout_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            date TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+    ''')
+
+    # Exercise log (session_id is NULL for manually logged exercises)
     cursor.execute('''
         CREATE TABLE exercise_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
             exercise_name TEXT NOT NULL,
-            calories_burned INTEGER NOT NULL,
-            duration_minutes INTEGER NOT NULL,
+            sets INTEGER NOT NULL DEFAULT 3,
+            reps INTEGER NOT NULL DEFAULT 10,
             date TEXT NOT NULL,
+            session_id INTEGER REFERENCES workout_sessions(id),
+            completed INTEGER DEFAULT 0,
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
         )
     ''')
@@ -82,6 +95,8 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
         )
     ''')
+    
+    #Sample foods in case of both openfoodfacts apis failing
     
     # Add sample food items
     foods = [
