@@ -110,6 +110,7 @@ OFF_TIMEOUT = 5
 def get_db():
     conn = sqlite3.connect('fitness.db')
     conn.row_factory = sqlite3.Row
+    conn.execute('PRAGMA foreign_keys = ON')
     return conn
 
 
@@ -792,6 +793,18 @@ def update_goals():
     ))
     conn.commit()
     conn.close()
+    return jsonify({'success': True})
+
+
+@app.route('/api/delete-account', methods=['POST'])
+@login_required
+def delete_account():
+    user_id = session['user_id']
+    conn = get_db()
+    conn.execute('DELETE FROM users WHERE id = ?', (user_id,))
+    conn.commit()
+    conn.close()
+    session.clear()
     return jsonify({'success': True})
 
 

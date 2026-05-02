@@ -253,6 +253,80 @@
 
         .logout-btn:hover { background: #fff5f5; border-color: #e74c3c; }
 
+        .delete-btn {
+            width: 100%;
+            padding: 14px;
+            background: none;
+            border: 2px solid #ecf0f1;
+            border-radius: 14px;
+            color: #95a5a6;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .delete-btn:hover { background: #fff5f5; border-color: #e74c3c; color: #e74c3c; }
+
+        /* confirmation modal */
+        .modal-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 30;
+            align-items: center;
+            justify-content: center;
+            border-radius: 40px;
+        }
+
+        .modal-overlay.show { display: flex; }
+
+        .modal {
+            background: white;
+            border-radius: 24px;
+            padding: 28px 24px;
+            margin: 20px;
+            text-align: center;
+        }
+
+        .modal-icon { font-size: 42px; margin-bottom: 12px; }
+        .modal h2 { font-size: 20px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; }
+        .modal p  { font-size: 14px; color: #7f8c8d; line-height: 1.5; margin-bottom: 24px; }
+
+        .modal-actions { display: flex; gap: 10px; }
+
+        .modal-cancel {
+            flex: 1;
+            padding: 13px;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+            cursor: pointer;
+        }
+
+        .modal-confirm {
+            flex: 1;
+            padding: 13px;
+            background: #e74c3c;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+        }
+
+        .modal-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
+
         .bottom-nav {
             display: flex;
             justify-content: space-around;
@@ -336,10 +410,13 @@
                 </div>
             </div>
 
-            <!-- logout -->
+            <!-- logout / delete -->
             <div class="section-card">
                 <button class="logout-btn" onclick="logout()">
                     <i class="fas fa-right-from-bracket"></i> Log Out
+                </button>
+                <button class="delete-btn" onclick="showDeleteModal()">
+                    <i class="fas fa-trash"></i> Delete Account
                 </button>
             </div>
 
@@ -347,6 +424,19 @@
 
         <!-- saved toast notification -->
         <div class="toast" id="toast">Goals saved!</div>
+
+        <!-- delete confirmation modal -->
+        <div class="modal-overlay" id="delete-modal">
+            <div class="modal">
+                <div class="modal-icon">⚠️</div>
+                <h2>Delete Account?</h2>
+                <p>This will permanently delete your account and all your data. This cannot be undone.</p>
+                <div class="modal-actions">
+                    <button class="modal-cancel" onclick="hideDeleteModal()">Cancel</button>
+                    <button class="modal-confirm" id="confirm-delete-btn" onclick="deleteAccount()">Delete</button>
+                </div>
+            </div>
+        </div>
 
         <div class="bottom-nav">
             <button class="nav-item" onclick="navigate('/')"><i class="fas fa-house"></i><span>Home</span></button>
@@ -360,6 +450,30 @@
     <script>
         function navigate(path) { window.location.href = path; }
         function logout()       { window.location.href = '/logout'; }
+
+        function showDeleteModal() {
+            document.getElementById('delete-modal').classList.add('show');
+        }
+
+        function hideDeleteModal() {
+            document.getElementById('delete-modal').classList.remove('show');
+        }
+
+        async function deleteAccount() {
+            const btn = document.getElementById('confirm-delete-btn');
+            btn.disabled    = true;
+            btn.textContent = 'Deleting...';
+
+            const res  = await fetch('/api/delete-account', { method: 'POST' });
+            const data = await res.json();
+
+            if (data.success) {
+                window.location.href = '/login';
+            } else {
+                btn.disabled    = false;
+                btn.textContent = 'Delete';
+            }
+        }
 
         let editing = false;
 
