@@ -170,6 +170,12 @@ def profile():
     return render_template('profile.html')
 
 
+@app.route('/settings')
+@login_required
+def settings():
+    return render_template('settings.html')
+
+
 @app.route('/workout')
 @login_required
 def workout():

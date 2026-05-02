@@ -37,10 +37,22 @@
             align-items: center;
         }
 
-        .date-section h1 { font-size: 28px; font-weight: 600; margin-bottom: 5px; }
-        .date-section p  { font-size: 14px; opacity: 0.9; }
+        .header-side {
+            width: 42px;
+            display: flex;
+            align-items: center;
+        }
 
-        .profile-btn {
+        .header-side.right { justify-content: flex-end; }
+
+        .date-section {
+            flex: 1;
+            text-align: center;
+        }
+
+        .date-section h1 { font-size: 22px; font-weight: 600; }
+
+        .header-btn {
             background: rgba(255,255,255,0.2);
             border: none;
             color: white;
@@ -56,7 +68,7 @@
             flex-shrink: 0;
         }
 
-        .profile-btn:hover { background: rgba(255,255,255,0.35); }
+        .header-btn:hover { background: rgba(255,255,255,0.35); }
 
         .content {
             flex: 1;
@@ -167,18 +179,34 @@
 
         .nav-item i { font-size: 18px; }
         .nav-item.active { color: white; }
+
+        /* Dark mode */
+        .phone-frame.dark { background: #1a1a2a; }
+        .phone-frame.dark .content { background: #12121e; }
+        .phone-frame.dark .macro-card.protein { background: #1a2535; }
+        .phone-frame.dark .macro-card.carbs   { background: #261f14; }
+        .phone-frame.dark .macro-card.fats    { background: #201424; }
+        .phone-frame.dark .calorie-number { color: #e8e8f0; }
+        .phone-frame.dark .calorie-label  { color: #6b6b80; }
+        .phone-frame.dark .macro-label    { color: #6b6b80; }
     </style>
 </head>
 <body>
-    <div class="phone-frame">
+    <div class="phone-frame" id="phone-frame">
         <div class="header">
-            <div class="date-section">
-                <h1>Today</h1>
-                <p id="current-date"></p>
+            <div class="header-side">
+                <button class="header-btn" onclick="navigate('/settings')">
+                    <i class="fas fa-gear"></i>
+                </button>
             </div>
-            <button class="profile-btn" onclick="navigate('/profile')">
-                <i class="fas fa-user"></i>
-            </button>
+            <div class="date-section">
+                <h1 id="current-date"></h1>
+            </div>
+            <div class="header-side right">
+                <button class="header-btn" onclick="navigate('/profile')">
+                    <i class="fas fa-user"></i>
+                </button>
+            </div>
         </div>
 
         <div class="content">
@@ -226,6 +254,10 @@
     </div>
 
     <script>
+        if (localStorage.getItem('fitbro_darkMode') === 'true') {
+            document.getElementById('phone-frame').classList.add('dark');
+        }
+
         const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
         const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
         const today  = new Date();

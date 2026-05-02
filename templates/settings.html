@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FitBro - Settings</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .phone-frame {
+            width: 400px;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            height: 750px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #48c774, #3ab566);
+            padding: 30px 25px;
+            color: white;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .back-btn:hover { background: rgba(255,255,255,0.35); }
+
+        .header h1 { font-size: 26px; font-weight: 700; }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #95a5a6;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin: 20px 0 8px 4px;
+        }
+
+        .section-label:first-child { margin-top: 4px; }
+
+        .settings-card {
+            background: white;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            padding: 16px 18px;
+            gap: 14px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .setting-row:last-child { border-bottom: none; }
+
+        .setting-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .icon-green  { background: #e8f8f0; color: #48c774; }
+        .icon-blue   { background: #e3f2fd; color: #1976d2; }
+        .icon-purple { background: #f3e5f5; color: #7b1fa2; }
+        .icon-orange { background: #fff3e0; color: #f57c00; }
+
+        .setting-info { flex: 1; }
+        .setting-info .label  { font-size: 15px; font-weight: 600; color: #2c3e50; }
+        .setting-info .sublabel { font-size: 12px; color: #95a5a6; margin-top: 2px; }
+
+        /* Toggle switch */
+        .toggle {
+            position: relative;
+            width: 50px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .toggle input { opacity: 0; width: 0; height: 0; }
+
+        .toggle-track {
+            position: absolute;
+            inset: 0;
+            background: #dde0e4;
+            border-radius: 28px;
+            cursor: pointer;
+            transition: background 0.25s;
+        }
+
+        .toggle-track::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.25s;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle input:checked + .toggle-track { background: #48c774; }
+        .toggle input:checked + .toggle-track::after { transform: translateX(22px); }
+
+        /* Dark mode styles */
+        .phone-frame.dark { background: #1a1a2a; }
+        .phone-frame.dark .content { background: #12121e; }
+        .phone-frame.dark .settings-card { background: #1e1e2e; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+        .phone-frame.dark .setting-row { border-bottom-color: #2a2a3a; }
+        .phone-frame.dark .setting-info .label { color: #e8e8f0; }
+        .phone-frame.dark .setting-info .sublabel { color: #6b6b80; }
+        .phone-frame.dark .section-label { color: #6b6b80; }
+        .phone-frame.dark .toggle-track { background: #3a3a4a; }
+    </style>
+</head>
+<body>
+    <div class="phone-frame" id="phone-frame">
+        <div class="header">
+            <button class="back-btn" onclick="navigate('/')">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <h1>Settings</h1>
+        </div>
+
+        <div class="content">
+            <div class="section-label">Notifications</div>
+            <div class="settings-card">
+                <div class="setting-row">
+                    <div class="setting-icon icon-green"><i class="fas fa-bell"></i></div>
+                    <div class="setting-info">
+                        <div class="label">Push Notifications</div>
+                        <div class="sublabel">Nutrient & calorie alerts</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="toggle-notifications" onchange="saveSetting('notifications', this.checked)">
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-icon icon-orange"><i class="fas fa-fire"></i></div>
+                    <div class="setting-info">
+                        <div class="label">Calorie Warnings</div>
+                        <div class="sublabel">Alert when over calorie goal</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="toggle-calorie-warnings" onchange="saveSetting('calorieWarnings', this.checked)">
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="section-label">Appearance</div>
+            <div class="settings-card">
+                <div class="setting-row">
+                    <div class="setting-icon icon-purple"><i class="fas fa-moon"></i></div>
+                    <div class="setting-info">
+                        <div class="label">Dark Mode</div>
+                        <div class="sublabel">Easy on the eyes at night</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="toggle-dark-mode" onchange="toggleDarkMode(this.checked)">
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function navigate(path) { window.location.href = path; }
+
+        function saveSetting(key, value) {
+            localStorage.setItem('fitbro_' + key, value);
+        }
+
+        function toggleDarkMode(enabled) {
+            localStorage.setItem('fitbro_darkMode', enabled);
+            document.getElementById('phone-frame').classList.toggle('dark', enabled);
+        }
+
+        // Restore saved settings on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const darkMode = localStorage.getItem('fitbro_darkMode') === 'true';
+            const notifications = localStorage.getItem('fitbro_notifications') !== 'false';
+            const calorieWarnings = localStorage.getItem('fitbro_calorieWarnings') !== 'false';
+
+            document.getElementById('toggle-dark-mode').checked = darkMode;
+            document.getElementById('toggle-notifications').checked = notifications;
+            document.getElementById('toggle-calorie-warnings').checked = calorieWarnings;
+
+            if (darkMode) document.getElementById('phone-frame').classList.add('dark');
+        });
+    </script>
+</body>
+</html>
