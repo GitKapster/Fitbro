@@ -359,9 +359,7 @@
                 if (dateStr === selectedDate) cell.classList.add('selected');
                 if (loggedDates[dateStr])     cell.classList.add('has-log');
 
-                const cellDate = new Date(currentYear, currentMonth, d);
-                cellDate.setHours(23, 59, 59);
-                if (cellDate > today) cell.classList.add('future');
+                if (dateStr > todayStr) cell.classList.add('future');
 
                 if (loggedDates[dateStr]) {
                     const dot = document.createElement('span');

@@ -133,7 +133,6 @@
             border-radius: 20px;
             padding: 20px;
             margin-bottom: 12px;
-            cursor: pointer;
             transition: transform 0.2s;
         }
 
@@ -144,15 +143,91 @@
             justify-content: space-between;
             align-items: center;
             color: white;
+            cursor: pointer;
+            user-select: none;
         }
 
-        .meal-header h3 { font-size: 18px; font-weight: 600; }
-        .meal-calories  { font-size: 22px; font-weight: 700; }
+        .meal-header-left h3 { font-size: 18px; font-weight: 600; }
+
+        .meal-header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .meal-calories { font-size: 22px; font-weight: 700; color: white; }
+
+        .meal-chevron {
+            font-size: 14px;
+            color: rgba(255,255,255,0.8);
+            transition: transform 0.2s;
+            display: inline-block;
+        }
 
         .meal-items {
+            margin-top: 4px;
+            color: rgba(255,255,255,0.75);
+            font-size: 12px;
+        }
+
+        .meal-body {
+            display: none;
             margin-top: 12px;
-            color: rgba(255,255,255,0.9);
+            border-top: 1px solid rgba(255,255,255,0.25);
+            padding-top: 10px;
+        }
+
+        .food-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 10px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.18);
+            margin-bottom: 6px;
+            transition: background 0.15s;
+        }
+
+        .food-item:last-child { margin-bottom: 0; }
+
+        .food-item:hover { background: rgba(255,255,255,0.28); }
+
+        .food-item-name {
             font-size: 13px;
+            font-weight: 500;
+            color: white;
+        }
+
+        .food-item-cal {
+            font-size: 11px;
+            color: rgba(255,255,255,0.65);
+            margin-top: 2px;
+        }
+
+        .remove-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+
+        .remove-btn:hover { background: rgba(220,50,50,0.5); }
+
+        .meal-empty-text {
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+            text-align: center;
+            padding: 6px 0;
         }
 
         .bottom-nav {
@@ -266,41 +341,83 @@
 
         function navigate(path) { window.location.href = path; }
 
-        fetch('/api/food-log')
-            .then(r => r.json())
-            .then(data => {
-                displayMealCards(data);
-                calculateTotals(data);
-            })
-            .catch(() => displayMealCards([]));
+        const expandedMeals = new Set();
+
+        function loadFoodLog() {
+            fetch('/api/food-log')
+                .then(r => r.json())
+                .then(data => {
+                    displayMealCards(data);
+                    calculateTotals(data);
+                })
+                .catch(() => displayMealCards([]));
+        }
+
+        loadFoodLog();
 
         function displayMealCards(foods) {
             const section   = document.getElementById('meals-section');
             const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
-
-            const groups = {};
+            const groups    = {};
             mealTypes.forEach(t => { groups[t] = foods.filter(f => f.meal_type === t); });
 
             section.innerHTML = mealTypes.map(mealType => {
                 const items    = groups[mealType];
-                const totalCal = items.reduce((sum, f) => sum + (f.calories * f.servings), 0);
+                const totalCal = Math.round(items.reduce((sum, f) => sum + (f.calories * f.servings), 0));
                 const count    = items.length;
+                const isOpen   = expandedMeals.has(mealType);
+
+                const itemsHtml = items.length > 0
+                    ? items.map(f => `
+                        <div class="food-item" id="food-item-${f.log_id}">
+                            <div>
+                                <div class="food-item-name">${f.name}</div>
+                                <div class="food-item-cal">${Math.round(f.calories * f.servings)} cal &middot; ${f.servings}x serving</div>
+                            </div>
+                            <button class="remove-btn" onclick="deleteFood(${f.log_id}, event)" title="Remove">&#215;</button>
+                        </div>`).join('')
+                    : '<div class="meal-empty-text">No items yet</div>';
 
                 return `
-                    <div class="meal-card" onclick="viewMeal('${mealType}')">
-                        <div class="meal-header">
-                            <h3>${mealType}</h3>
-                            <div class="meal-calories">${Math.round(totalCal)} cal</div>
+                    <div class="meal-card">
+                        <div class="meal-header" onclick="toggleMeal('${mealType}')">
+                            <div class="meal-header-left">
+                                <h3>${mealType}</h3>
+                                <div class="meal-items">${count > 0 ? `${count} item${count !== 1 ? 's' : ''}` : 'No items yet'}</div>
+                            </div>
+                            <div class="meal-header-right">
+                                <div class="meal-calories">${totalCal} cal</div>
+                                <span class="meal-chevron" id="chevron-${mealType}" style="transform:${isOpen ? 'rotate(180deg)' : 'rotate(0deg)'}">&#9660;</span>
+                            </div>
                         </div>
-                        <div class="meal-items">
-                            ${count > 0 ? `${count} item${count !== 1 ? 's' : ''}` : 'No items yet'}
+                        <div class="meal-body" id="meal-body-${mealType}" style="display:${isOpen ? 'block' : 'none'}">
+                            ${itemsHtml}
                         </div>
-                    </div>
-                `;
+                    </div>`;
             }).join('');
         }
 
-        function viewMeal(mealType) { window.location.href = `/meal/${mealType}`; }
+        function toggleMeal(mealType) {
+            const body    = document.getElementById(`meal-body-${mealType}`);
+            const chevron = document.getElementById(`chevron-${mealType}`);
+            if (expandedMeals.has(mealType)) {
+                expandedMeals.delete(mealType);
+                body.style.display    = 'none';
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                expandedMeals.add(mealType);
+                body.style.display    = 'block';
+                chevron.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        async function deleteFood(logId, event) {
+            event.stopPropagation();
+            try {
+                const res = await fetch(`/api/delete-food/${logId}`, { method: 'DELETE' });
+                if (res.ok) { loadFoodLog(); }
+            } catch(e) {}
+        }
 
         function calculateTotals(meals) {
             const goal = 2000;

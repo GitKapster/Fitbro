@@ -453,8 +453,8 @@ def get_food_log():
     today = str(date.today())
     user_id = session['user_id']
     cursor.execute('''
-        SELECT f.name, f.calories, f.protein, f.carbs, f.fat, 
-               fl.meal_type, fl.servings
+        SELECT f.name, f.calories, f.protein, f.carbs, f.fat,
+               fl.meal_type, fl.servings, fl.id as log_id
         FROM food_log fl
         JOIN foods f ON fl.food_id = f.id
         WHERE fl.date = ? AND fl.user_id = ?
