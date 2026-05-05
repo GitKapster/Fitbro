@@ -94,6 +94,7 @@
 
         .circle-bg       { stroke: #e8e8e8; }
         .circle-progress { stroke: #48c774; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
+        .circle-progress.over { stroke: #e74c3c; stroke-linecap: butt; }
 
         .calorie-text {
             position: absolute;
@@ -104,7 +105,9 @@
         }
 
         .calorie-number { font-size: 48px; font-weight: 700; color: #2c3e50; line-height: 1; }
+        .calorie-number.over { font-size: 36px; color: #e74c3c; }
         .calorie-label  { font-size: 14px; color: #7f8c8d; margin-top: 5px; }
+        .calorie-label.over { color: #e74c3c; }
 
         .macros { display: flex; gap: 12px; margin-bottom: 30px; }
 
@@ -298,7 +301,7 @@
                     </svg>
                     <div class="calorie-text">
                         <div class="calorie-number" id="calories-remaining">—</div>
-                        <div class="calorie-label">remaining</div>
+                        <div class="calorie-label" id="calorie-label">remaining</div>
                     </div>
                 </div>
             </div>
@@ -437,14 +440,33 @@
                 fat      += m.fat      * m.servings;
             });
 
-            document.getElementById('calories-remaining').textContent = Math.round(goal - consumed);
+            const over = consumed > goal;
+            const diff = Math.round(Math.abs(goal - consumed));
+
+            const numEl   = document.getElementById('calories-remaining');
+            const lblEl   = document.getElementById('calorie-label');
+            const circEl  = document.getElementById('progress-circle');
+
+            if (over) {
+                numEl.textContent = diff + ' over';
+                numEl.classList.add('over');
+                lblEl.textContent = 'your goal';
+                lblEl.classList.add('over');
+                circEl.classList.add('over');
+                circEl.style.strokeDashoffset = '0';
+            } else {
+                numEl.textContent = diff;
+                numEl.classList.remove('over');
+                lblEl.textContent = 'remaining';
+                lblEl.classList.remove('over');
+                circEl.classList.remove('over');
+                const circ = 502.4;
+                circEl.style.strokeDashoffset = circ - ((consumed / goal) * circ);
+            }
+
             document.getElementById('protein-value').textContent = Math.round(protein) + 'g';
             document.getElementById('carbs-value').textContent   = Math.round(carbs)   + 'g';
             document.getElementById('fats-value').textContent    = Math.round(fat)     + 'g';
-
-            const circ = 502.4;
-            document.getElementById('progress-circle').style.strokeDashoffset =
-                circ - ((consumed / goal) * circ);
         }
     </script>
 </body>
