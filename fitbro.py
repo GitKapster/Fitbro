@@ -115,6 +115,7 @@ def get_db():
 
 
 # checks if the user is logged in before letting them access a page
+#protecting the routes
 def login_required(f):
     def wrapper(*args, **kwargs):
         if 'user_id' not in session:
@@ -174,6 +175,7 @@ def register():
         return jsonify({'success': True})
     return render_template('register.html')
 
+#STUDENT EMAIL VERIFICATION FUNCTION
 
 @app.route('/api/send-verification', methods=['POST'])
 def send_verification():
@@ -181,6 +183,8 @@ def send_verification():
     email    = (data.get('email') or '').strip().lower()
     username = (data.get('username') or '').strip()
     password =  data.get('password') or ''
+
+#CHECK AGAINST A LIST OF UNI DOMAINS
 
     if not email or not username or not password:
         return jsonify({'success': False, 'error': 'All fields required'})
@@ -198,6 +202,7 @@ def send_verification():
         return jsonify({'success': False, 'error': 'Email already registered'})
     conn.close()
 
+    #Code gets generated for email verification
     code = str(secrets.randbelow(900000) + 100000)
     session['stu_code']    = code
     session['stu_email']   = email
@@ -223,6 +228,7 @@ def verify_student():
     if not stored_code or not pending:
         return jsonify({'success': False, 'error': 'Session expired. Please start again.'})
 
+    #Code Expirery - Check if verification code has expired (10 minutes)
     if datetime.now() > datetime.fromisoformat(stored_expires):
         return jsonify({'success': False, 'error': 'Code expired. Please request a new one.'})
 
@@ -241,6 +247,7 @@ def verify_student():
         conn.close()
         return jsonify({'success': False, 'error': 'Email already registered'})
 
+    #The user gets inserted into the database
     cursor.execute('''
         INSERT INTO users (username, email, password, is_student, age, height,
                            daily_calorie_goal, daily_protein_goal, daily_carbs_goal, daily_fat_goal)
@@ -263,6 +270,7 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
+#Examples of protecting routes being used to access features
 
 @app.route('/')
 @login_required
@@ -547,7 +555,6 @@ PROCESSED_WORDS = {
 
 
 # gives each result a score based on how well it matches what the user typed
-# returns two numbers as a pair so results sort by match quality first
 # then by name length, shorter names rank higher within the same quality level
 # score 0 exact match, 1 starts with query and is a whole food
 # score 2 query is somewhere in the name and is a whole food
@@ -595,6 +602,7 @@ def parse_and_sort(products, query):
     results.sort(key=lambda r: match_score(r['name'], query))
     return results
 
+#OPENFOODFACTS API
 
 # tries the main OpenFoodFacts API first
 # if that fails or returns nothing it tries the backup API

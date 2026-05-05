@@ -297,7 +297,7 @@
                                 stroke-dashoffset="502.4"></circle>
                     </svg>
                     <div class="calorie-text">
-                        <div class="calorie-number" id="calories-remaining">2000</div>
+                        <div class="calorie-number" id="calories-remaining">—</div>
                         <div class="calorie-label">remaining</div>
                     </div>
                 </div>
@@ -345,12 +345,17 @@
 
         const expandedMeals = new Set();
 
+        let calorieGoal = 2000;
+
         function loadFoodLog() {
-            fetch('/api/food-log')
-                .then(r => r.json())
-                .then(data => {
-                    displayMealCards(data);
-                    calculateTotals(data);
+            Promise.all([
+                fetch('/api/food-log').then(r => r.json()),
+                fetch('/api/user').then(r => r.json())
+            ])
+                .then(([foodData, userData]) => {
+                    calorieGoal = userData.daily_calorie_goal || 2000;
+                    displayMealCards(foodData);
+                    calculateTotals(foodData);
                 })
                 .catch(() => displayMealCards([]));
         }
@@ -422,7 +427,7 @@
         }
 
         function calculateTotals(meals) {
-            const goal = 2000;
+            const goal = calorieGoal;
             let consumed = 0, protein = 0, carbs = 0, fat = 0;
 
             meals.forEach(m => {
